@@ -39,20 +39,27 @@
             background: #10b981;
         }
 
-        /* 1. Reset physical page boundaries to 0 to bypass inconsistent browser print controls */
+        /* Explicitly show date picker calendar icon in dark inputs */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) opacity(0.7);
+            cursor: pointer;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            filter: invert(1) opacity(1);
+        }
+
+        /* Reset physical page boundaries to 0 for print */
         @page {
             size: portrait;
             margin: 0 !important;
         }
 
-        /* Custom print overrides (Fixed container flow to prevent blank previews) */
+        /* Custom print overrides */
         @media print {
-            /* 1. Hide on-screen navigation elements */
             #sidebar, #sidebar-backdrop, .no-print, .h-16, #form-modal, #confirm-modal {
                 display: none !important;
             }
 
-            /* 2. Reset document root containers for standard physical page printing */
             html, body {
                 background: #ffffff !important;
                 color: #000000 !important;
@@ -62,7 +69,6 @@
                 display: block !important;
             }
 
-            /* 3. Permit workspace and layout containers to expand naturally */
             .flex-grow, .flex-1, #view-dashboard, #view-reports, #view-repository, #view-utilities, #print-only-profile, #report-table-wrapper {
                 overflow: visible !important;
                 max-height: none !important;
@@ -75,17 +81,11 @@
                 display: block !important;
             }
 
-            /* Force internal container wrappers to not hide our printable target */
             div {
                 overflow: visible !important;
                 height: auto !important;
             }
 
-            /* 
-               4. GUARANTEED AUTOMATIC PRINT MARGIN ALIGNMENT: 
-               Since the @page margin is reset to 0, these paddings act as the exact, locked margins on physical paper.
-               This guarantees balanced 12mm top/bottom and 15mm left/right margins regardless of browser settings.
-            */
             #print-only-profile, .print-exec-layout .print-card {
                 padding: 12mm 15mm 12mm 15mm !important;
                 box-sizing: border-box !important;
@@ -98,7 +98,6 @@
                 display: block !important;
             }
 
-            /* Executive Report Table Only: Compress padding and font sizes proportionately within margins */
             .print-table {
                 table-layout: auto !important;
                 width: 100% !important;
@@ -118,47 +117,17 @@
                 white-space: nowrap !important;
             }
 
-            /* Single Profile Page Sizing Rules */
-            #print-only-profile h2 {
-                font-size: 16pt !important;
-                font-weight: 700 !important;
-            }
-            #print-only-profile h3 {
-                font-size: 12pt !important;
-                font-weight: 700 !important;
-            }
-            #print-only-profile .font-mono {
-                font-size: 9.5pt !important;
-                white-space: nowrap !important;
-            }
-            #print-only-profile strong {
-                font-size: 11pt !important;
-            }
-            #print-only-profile span {
-                font-size: 9pt !important;
-            }
-
-            /* 5. Printing Single Vehicle Profile: Hide report and dashboard, show only profile card */
-            body.printing-single-profile #print-only-profile {
-                display: block !important;
-            }
+            body.printing-single-profile #print-only-profile { display: block !important; }
             body.printing-single-profile #view-dashboard,
             body.printing-single-profile #view-reports,
             body.printing-single-profile #view-repository,
-            body.printing-single-profile #view-utilities {
-                display: none !important;
-            }
+            body.printing-single-profile #view-utilities { display: none !important; }
 
-            /* 6. Printing Executive Compliance Report: Hide profile card and dashboard, show only report tables */
-            body.printing-exec-report #view-reports {
-                display: block !important;
-            }
+            body.printing-exec-report #view-reports { display: block !important; }
             body.printing-exec-report #print-only-profile,
             body.printing-exec-report #view-dashboard,
             body.printing-exec-report #view-repository,
-            body.printing-exec-report #view-utilities {
-                display: none !important;
-            }
+            body.printing-exec-report #view-utilities { display: none !important; }
         }
     </style>
 </head>
@@ -178,45 +147,29 @@
         </div>
     </div>
 
-    <!-- Custom Confirmation Modal Overlay (Guarantees execution in any browser sandbox) -->
-    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
-        <div class="bg-brand-card border border-brand-border w-full max-w-sm rounded-xl p-6 shadow-2xl space-y-6">
-            <div class="flex items-center gap-3 text-rose-400">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                <h3 class="text-lg font-bold text-white">Confirm Removal</h3>
-            </div>
-            <p class="text-sm text-slate-300 leading-relaxed" id="confirm-modal-text">Are you sure you want to completely remove this document link?</p>
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" id="confirm-modal-cancel" class="border border-brand-border hover:bg-slate-800 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold transition-all">Cancel</button>
-                <button type="button" id="confirm-modal-confirm" class="bg-rose-600 hover:bg-rose-50 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-all">Yes, Remove</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Security Gatekeeper Overlay -->
-    <div class="fixed inset-0 bg-brand-dark z-[8888] flex items-center justify-center p-4" id="gatekeeper-lock">
+    <div class="fixed inset-0 bg-brand-dark z-[8888] flex items-center justify-center p-4 hidden" id="gatekeeper-lock">
         <div class="bg-brand-card border border-brand-border w-full max-w-md rounded-xl p-8 shadow-2xl text-center">
             <div class="mx-auto w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mb-6">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
             </div>
             <h2 class="text-2xl font-bold tracking-tight text-white mb-1">FLEET MONITOR PH</h2>
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-6">City Engineering Office • Baguio</p>
-            <form id="gatekeeper-form">
+            <form id="gatekeeper-form" onsubmit="handleAuth(event)">
                 <div class="mb-4">
                     <input type="password" id="gatekeeper-pass" class="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-center text-lg tracking-widest text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" placeholder="••••••••" required autocomplete="current-password">
                 </div>
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 px-4 rounded-lg font-semibold transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
                     🔑 Verify Access Credentials
                 </button>
-                <div class="text-rose-500 text-sm font-semibold mt-4 hidden" id="gatekeeper-error">Invalid security password. Access denied.</div>
             </form>
         </div>
     </div>
 
-    <!-- Mobile Navigation Backdrop Drawer Overlay -->
+    <!-- Mobile Navigation Backdrop Overlay -->
     <div id="sidebar-backdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden md:hidden"></div>
 
-    <!-- Sidebar Navigation (Drawer Collapsible on Mobile) -->
+    <!-- Sidebar Navigation -->
     <div id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-brand-card border-r border-brand-border flex flex-col justify-between no-print shrink-0 transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 md:static">
         <div>
             <div class="p-6 border-b border-brand-border flex items-center justify-between">
@@ -243,7 +196,7 @@
                     Docs Repository
                 </button>
                 <button id="side-nav-utilities" onclick="switchActiveView('utilities')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/50 hover:text-white group">
-                    <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31(2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     System Utilities
                 </button>
             </div>
@@ -254,25 +207,24 @@
         </div>
     </div>
 
-    <!-- Workspace Area (Fixed widths dynamically adjusted to prevent shrinking) -->
+    <!-- Workspace Area -->
     <div class="flex-grow flex-1 min-w-0 flex flex-col overflow-hidden bg-brand-dark h-full">
         <!-- Top Bar Header -->
         <div class="h-16 border-b border-brand-border px-4 sm:px-8 flex items-center justify-between bg-brand-card shrink-0 no-print">
             <div class="flex items-center gap-3">
-                <!-- Hamburger Trigger Button -->
                 <button onclick="toggleMobileSidebar(true)" class="md:hidden text-slate-300 hover:text-white p-2 -ml-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
                 <h1 id="workspace-view-header-title" class="text-base sm:text-xl font-bold text-white tracking-wide truncate">Active Fleet Registry</h1>
             </div>
-            <button class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold py-2 px-3 sm:py-2 sm:px-4 rounded-lg shadow-lg shadow-emerald-900/10 flex items-center gap-1 sm:gap-2 transition-all" id="menu-add-vehicle">
+            <button class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold py-2 px-3 sm:py-2 sm:px-4 rounded-lg shadow-lg shadow-emerald-900/10 flex items-center gap-1 sm:gap-2 transition-all" onclick="alert('Open New Vehicle Modal')">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 <span class="hidden sm:inline">Add Vehicle / Equipment</span>
                 <span class="sm:hidden">Add New</span>
             </button>
         </div>
 
-        <!-- Dashboard View Container (Reverted back to full natural scroll bounds) -->
+        <!-- View 1: Main Dashboard -->
         <div class="flex-grow p-4 sm:p-8 overflow-y-auto no-print space-y-6 sm:space-y-8" id="view-dashboard">
             <!-- Metrics Segment -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -284,12 +236,12 @@
                 <div class="bg-brand-card border-t-4 border-t-rose-500 border border-brand-border p-4 sm:p-6 rounded-xl shadow-lg">
                     <span class="text-[10px] sm:text-xs font-bold text-rose-400 uppercase tracking-widest block">Expired Records</span>
                     <span class="text-2xl sm:text-3xl font-extrabold text-white mt-1 sm:mt-2 block" id="stat-expired">0</span>
-                    <span class="text-[9px] sm:text-xs text-rose-300 mt-1 block font-medium truncate" id="stat-expired-sub">0 LTO • 0 GSIS • 0 PMS</span>
+                    <span class="text-[9px] sm:text-xs text-rose-300 mt-1 block font-medium truncate" id="stat-expired-sub">0 LTO • 0 GSIS</span>
                 </div>
                 <div class="bg-brand-card border-t-4 border-t-amber-500 border border-brand-border p-4 sm:p-6 rounded-xl shadow-lg">
                     <span class="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-widest block font-medium">Expiring & Due</span>
                     <span class="text-2xl sm:text-3xl font-extrabold text-white mt-1 sm:mt-2 block" id="stat-warning">0</span>
-                    <span class="text-[9px] sm:text-xs text-amber-300 mt-1 block truncate" id="stat-warning-sub">0 LTO • 0 GSIS • 0 PMS</span>
+                    <span class="text-[9px] sm:text-xs text-amber-300 mt-1 block truncate" id="stat-warning-sub">0 LTO • 0 GSIS</span>
                 </div>
                 <div class="bg-brand-card border-t-4 border-t-emerald-500 border border-brand-border p-4 sm:p-6 rounded-xl shadow-lg">
                     <span class="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-widest block">Fully Compliant</span>
@@ -298,100 +250,84 @@
                 </div>
             </div>
 
-            <!-- Active Expiring Alerts Block -->
-            <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 sm:p-6 hidden space-y-4" id="alerts-container-box">
-                <div class="flex items-center justify-between gap-2 text-amber-500 font-bold text-xs uppercase tracking-widest">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Expiration & Maintenance Attention Required (<span id="alert-badge-count">0</span>)
+            <!-- UPCOMING REGISTRATION & GSIS RENEWAL TIMELINE -->
+            <div class="bg-brand-card border border-brand-border rounded-xl p-4 sm:p-6 shadow-xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brand-border pb-4">
+                    <div>
+                        <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm uppercase tracking-wider">
+                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Upcoming Registration & GSIS Renewals Timeline
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Chronological list of upcoming LTO registrations, GSIS policies, and PMS checks to prevent non-compliance penalties.</p>
                     </div>
-                    <button type="button" onclick="toggleAlertsPanel()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 hover:border-amber-500/40 text-[10px] font-bold px-2.5 py-1 rounded transition-all">
-                        <span id="alerts-toggle-btn-text">Collapse</span>
-                    </button>
+                    <div class="flex items-center gap-2 bg-brand-dark px-3 py-1.5 rounded-lg border border-brand-border text-xs text-slate-300">
+                        <span class="text-slate-400">Filter Date:</span>
+                        <!-- Date Input with Visible Native Calendar Icon -->
+                        <input type="date" id="timeline-date-picker" onchange="renderUpcomingTimeline()" class="bg-transparent text-white focus:outline-none cursor-pointer font-medium">
+                    </div>
                 </div>
-                <div id="alerts-list-hook" class="space-y-3 max-h-56 overflow-y-auto pr-2 scrollbar-thin"></div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-900/80 text-[10px] uppercase tracking-wider text-slate-400 font-bold border-b border-brand-border">
+                            <tr>
+                                <th class="py-3 px-4">Due Date</th>
+                                <th class="py-3 px-4">Type</th>
+                                <th class="py-3 px-4">Plate / Control No.</th>
+                                <th class="py-3 px-4">Vehicle Model</th>
+                                <th class="py-3 px-4">Assigned Custodian</th>
+                                <th class="py-3 px-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timeline-table-body" class="divide-y divide-brand-border bg-transparent"></tbody>
+                    </table>
+                </div>
             </div>
 
-            <!-- Filter & Search Toolbar (Restored Segments & Category Support) -->
+            <!-- Filter & Search Toolbar -->
             <div class="bg-brand-card border border-brand-border rounded-xl p-4 sm:p-6 flex flex-col xl:flex-row gap-6 justify-between xl:items-center">
                 <div class="w-full xl:max-w-xs relative">
-                    <input type="text" class="w-full bg-brand-dark border border-brand-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" id="table-search" placeholder="Search plate, model, driver...">
+                    <input type="text" class="w-full bg-brand-dark border border-brand-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" id="table-search" oninput="renderTables()" placeholder="Search plate, model, driver...">
                     <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
                 <div class="flex flex-wrap gap-6 w-full xl:w-auto">
                     <div>
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Equipment Type</span>
                         <div class="flex sm:inline-flex rounded-lg bg-slate-950 p-1 border border-brand-border overflow-x-auto" id="filter-category-group">
-                            <button class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all whitespace-nowrap" data-filter="all">All Types</button>
-                            <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Service Vehicle">Vehicles</button>
-                            <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Heavy Equipment">Heavy</button>
-                            <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Light Equipment">Light/Tools</button>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">LTO Registration</span>
-                        <div class="flex sm:inline-flex rounded-lg bg-slate-950 p-1 border border-brand-border overflow-x-auto" id="filter-lto-group">
-                            <button class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all" data-filter="all">All</button>
-                            <button class="px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all" data-filter="valid">Valid</button>
-                            <button class="px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all" data-filter="expiring">Warning</button>
-                            <button class="px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all" data-filter="expired">Expired</button>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">GSIS Insurance</span>
-                        <div class="flex sm:inline-flex rounded-lg bg-slate-950 p-1 border border-brand-border overflow-x-auto" id="filter-gsis-group">
-                            <button class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all" data-filter="all">All</button>
-                            <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all" data-filter="valid">Valid</button>
-                            <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all" data-filter="expiring">Warning</button>
-                            <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all" data-filter="expired">Expired</button>
+                            <button class="px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all whitespace-nowrap" onclick="setFilter('category', 'all', this)">All Types</button>
+                            <button class="px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" onclick="setFilter('category', 'Service Vehicle', this)">Vehicles</button>
+                            <button class="px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" onclick="setFilter('category', 'Heavy Equipment', this)">Heavy</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Database Data Table Wrapper (Hidden on Mobile) -->
+            <!-- Desktop Database Data Table -->
             <div class="hidden md:block bg-brand-card border border-brand-border rounded-xl overflow-x-auto shadow-lg">
                 <table class="w-full text-left text-sm text-slate-300">
                     <thead class="bg-slate-900/60 text-[11px] uppercase tracking-wider text-slate-400 font-bold border-b border-brand-border">
                         <tr>
-                            <th class="py-4 px-6">Plate / Control / Serial No.</th>
-                            <th class="py-4 px-6">Description & Age</th>
-                            <th class="py-4 px-6">Assigned Driver / Custodian</th>
-                            <th class="py-4 px-6">LTO Status</th>
-                            <th class="py-4 px-6">GSIS Status</th>
+                            <th class="py-4 px-6">Plate / Control No.</th>
+                            <th class="py-4 px-6">Description</th>
+                            <th class="py-4 px-6">Custodian</th>
+                            <th class="py-4 px-6">LTO Expiry</th>
+                            <th class="py-4 px-6">GSIS Expiry</th>
                             <th class="py-4 px-6">Next PMS</th>
-                            <th class="py-4 px-6">Last Repair History Snippet</th>
-                            <th class="py-4 px-6 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="registry-table-body" class="divide-y divide-brand-border bg-transparent"></tbody>
                 </table>
             </div>
-
-            <!-- Mobile Card List Container (Only visible on small devices) -->
-            <div id="registry-mobile-list" class="block md:hidden space-y-4"></div>
         </div>
 
-        <!-- Executive Compliance Report View Container (Maintains Sticky Header internally) -->
+        <!-- View 2: Executive Compliance Report -->
         <div class="flex-grow flex-1 min-w-0 flex flex-col overflow-hidden p-4 sm:p-8 hidden" id="view-reports">
-            <!-- Filter Toolbar directly inside Executive Reports -->
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print bg-brand-card border border-brand-border p-4 rounded-xl shrink-0">
                 <button class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm shadow-md transition-all shrink-0" onclick="triggerExecutiveReportPrint()">
                     🖨️ Print Official Report
                 </button>
-                <div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Filter Report By Type</span>
-                    <div class="flex sm:inline-flex rounded-lg bg-slate-950 p-1 border border-brand-border overflow-x-auto" id="report-filter-category-group">
-                        <button class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all whitespace-nowrap" data-filter="all">All Types</button>
-                        <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Service Vehicle">Vehicles</button>
-                        <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Heavy Equipment">Heavy</button>
-                        <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Light Equipment">Light/Tools</button>
-                    </div>
-                </div>
             </div>
-
-            <!-- Scrollable Report Container Frame -->
-            <div class="flex-grow flex-1 min-h-0 overflow-y-auto pr-2 scrollbar-thin">
+            <div class="flex-grow flex-1 min-h-0 overflow-y-auto pr-2">
                 <div class="print-exec-layout print-card bg-white text-slate-900 p-6 sm:p-12 rounded-xl shadow-xl max-w-5xl mx-auto border border-slate-200 font-sans">
                     <div class="text-center border-b-2 border-slate-300 pb-6 mb-8">
                         <h2 class="text-xl sm:text-2xl font-bold tracking-tight uppercase text-slate-900">City Government of Baguio</h2>
@@ -399,415 +335,169 @@
                         <p class="text-sm sm:text-lg font-extrabold text-emerald-800 tracking-wide mt-4 sm:mt-6 uppercase">Executive Fleet Compliance & Maintenance Report</p>
                     </div>
                     <div class="text-right text-xs font-semibold text-slate-500 mb-6 italic" id="print-timestamp">Generated on: --</div>
-                    <div class="grid grid-cols-3 gap-4 sm:gap-6 mb-8 no-print text-xs">
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 sm:p-4 text-center">
-                            <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Active Units</span>
-                            <span class="text-lg sm:text-2xl font-extrabold text-slate-800 mt-1 block" id="rep-total">0</span>
-                        </div>
-                        <div class="bg-rose-50 border border-rose-100 rounded-lg p-3 sm:p-4 text-center">
-                            <span class="text-[9px] sm:text-[10px] font-bold text-rose-500 uppercase tracking-wider block">Expired / Overdue</span>
-                            <span class="text-lg sm:text-2xl font-extrabold text-rose-700 mt-1 block" id="rep-expired">0</span>
-                        </div>
-                        <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 sm:p-4 text-center">
-                            <span class="text-[9px] sm:text-[10px] font-bold text-amber-500 uppercase tracking-wider block">Pending / Due PMS</span>
-                            <span class="text-lg sm:text-2xl font-extrabold text-amber-700 mt-1 block" id="rep-warning">0</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Report Table Wrapper with on-screen maximum height constraint -->
-                    <div class="overflow-auto max-h-[50vh] sm:max-h-[55vh] border border-slate-200 rounded-lg" id="report-table-wrapper">
+                    <div class="overflow-auto max-h-[50vh] sm:max-h-[55vh] border border-slate-200 rounded-lg">
                         <table class="w-full text-left text-xs text-slate-800 print-table border-collapse">
                             <thead class="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-200 sticky top-0 z-10">
                                 <tr>
-                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">Plate No. & Status</th>
-                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">Identification Details</th>
-                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">Driver</th>
-                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">LTO Status</th>
-                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">GSIS Status</th>
-                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">Next PMS</th>
+                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">Plate No.</th>
+                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">Model Details</th>
+                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">LTO Expiry</th>
+                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">GSIS Expiry</th>
                                 </tr>
                             </thead>
-                            <tbody id="report-table-body" class="divide-y divide-slate-200 bg-transparent"></tbody>
+                            <tbody id="report-table-body" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Cloud Documentation Vault View Container -->
-        <div class="flex-grow p-4 sm:p-8 overflow-y-auto hidden space-y-6" id="view-repository">
-            <p class="text-sm text-slate-400 leading-relaxed max-w-3xl">
-                Securely upload or attach scanned PDF records or image snapshots of official LTO Official Receipts (O.R.), LTO Certificates of Registration (C.R.), and GSIS Certificates of Cover (C.O.C.). Files are hosted safely inside your Supabase Cloud Storage.
-            </p>
-            <!-- Search and Filter Toolbar specifically for Documents Repository -->
-            <div class="bg-brand-card border border-brand-border rounded-xl p-4 sm:p-6 flex flex-col xl:flex-row gap-6 justify-between xl:items-center shrink-0">
-                <div class="w-full xl:max-w-xs relative">
-                    <input type="text" class="w-full bg-brand-dark border border-brand-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" id="repo-search" placeholder="Search plate, custodian...">
-                    <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <!-- View 3: Document Repository -->
+        <div class="flex-grow p-4 sm:p-8 overflow-y-auto no-print hidden space-y-6" id="view-repository">
+            <div class="bg-brand-card border border-brand-border rounded-xl p-6 shadow-lg">
+                <h3 class="text-lg font-bold text-white mb-2">Centralized Digital Archives</h3>
+                <p class="text-xs text-slate-400">View and manage uploaded certificates, OR/CR, GSIS policy documents, and maintenance receipts across all active fleet units.</p>
+            </div>
+        </div>
+
+        <!-- View 4: System Utilities -->
+        <div class="flex-grow p-4 sm:p-8 overflow-y-auto no-print hidden space-y-6" id="view-utilities">
+            <div class="bg-brand-card border border-brand-border rounded-xl p-6 shadow-lg space-y-4 max-w-2xl">
+                <h3 class="text-lg font-bold text-white">System Data Utilities</h3>
+                <p class="text-xs text-slate-400">Perform maintenance actions on local system state and stored cache.</p>
+                <div class="pt-4 flex flex-wrap gap-4">
+                    <button onclick="exportSystemData()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-md transition-all">
+                        Export JSON Backup
+                    </button>
                 </div>
-                <div class="w-full sm:w-auto">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Equipment Type Filter</span>
-                    <div class="flex sm:inline-flex rounded-lg bg-slate-950 p-1 border border-brand-border overflow-x-auto" id="repo-filter-category-group">
-                        <button class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all whitespace-nowrap" data-filter="all">All Types</button>
-                        <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Service Vehicle">Vehicles</button>
-                        <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Heavy Equipment">Heavy</button>
-                        <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Light Equipment">Light/Tools</button>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-brand-card border border-brand-border rounded-xl overflow-hidden shadow-lg mt-6">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-900/60 text-[11px] uppercase tracking-wider text-slate-400 font-bold border-b border-brand-border">
-                            <tr>
-                                <th class="py-4 px-6">Plate No.</th>
-                                <th class="py-4 px-6">Assigned Officer</th>
-                                <th class="py-4 px-6">LTO Official Receipt (O.R.)</th>
-                                <th class="py-4 px-6">LTO Certificate of Registration (C.R.)</th>
-                                <th class="py-4 px-6">GSIS Insurance (C.O.C.)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="repo-table-body" class="divide-y divide-brand-border bg-transparent"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- System Utilities View Container -->
-        <div class="flex-grow p-4 sm:p-8 overflow-y-auto hidden" id="view-utilities">
-            <div class="bg-brand-card border border-brand-border p-6 rounded-xl max-w-2xl shadow-lg space-y-4">
-                <h3 class="text-lg font-bold text-white">Local JSON Registry Backup Utility</h3>
-                <p class="text-sm text-slate-400 leading-relaxed">
-                    Generate and download a localized snapshot file of the system registry records. Use this tool to preserve a flat-file version of the vehicle array on your computer.
-                </p>
-                <button class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center gap-2 text-sm shadow-md transition-all" onclick="exportLocalDatabaseToBackupFile()">
-                    📥 Download Local Snapshot (.json)
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit/Add Vehicle Form Modal Overlay -->
-    <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[1000] hidden items-center justify-center p-4" id="form-modal">
-        <div class="bg-brand-card border border-brand-border w-full max-w-xl rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]">
-            <div class="p-6 border-b border-brand-border flex items-center justify-between bg-slate-900/40">
-                <h3 id="modal-title" class="text-lg font-bold text-white">Log New Fleet Vehicle / Equipment</h3>
-                <button class="text-slate-400 hover:text-white text-xl font-bold p-1 leading-none transition-all" id="btn-close-modal">&times;</button>
-            </div>
-            <form id="vehicle-form" class="flex-grow flex flex-col overflow-hidden">
-                <input type="hidden" id="edit-idx" value="-1">
-                <!-- Hidden legacy history output synced behind scenes -->
-                <textarea id="f-history" class="hidden"></textarea>
-
-                <div class="p-4 sm:p-6 space-y-4 overflow-y-auto flex-grow max-h-[70vh]">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plate / Control / Serial No.</label>
-                            <input type="text" id="f-plate" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all" placeholder="e.g. SAB-2391 or PROP-CS-01" required>
-                        </div>
-                        <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Acquisition Year</label>
-                            <input type="number" id="f-year" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="e.g. 2019" min="1990" max="2030">
-                        </div>
-                        <div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Equipment Make / Model Description</label>
-                            <input type="text" id="f-model" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="e.g. Toyota Hilux / Stihl MS 250 Chainsaw" required>
-                        </div>
-                        <div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Operational Status</label>
-                            <select id="f-status" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
-                                <option value="Operational">🟢 Operational</option>
-                                <option value="Under Repair">🔴 Under Repair</option>
-                                <option value="Standby">🔵 Standby</option>
-                                <option value="Decommissioned">⚫ Decommissioned</option>
-                            </select>
-                        </div>
-                        <div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Equipment Classification Category</label>
-                            <select id="f-category" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
-                                <option value="Service Vehicle">🚗 Service Vehicle</option>
-                                <option value="Heavy Equipment">🚜 Heavy Equipment</option>
-                                <option value="Light Equipment">⚙️ Light Equipment / Power Tool</option>
-                            </select>
-                        </div>
-                        <div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assigned Driver / Custodian Employee</label>
-                            <input type="text" id="f-driver" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="Full name of driver or officer">
-                        </div>
-                        <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1" id="wrapper-chassis">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Chassis Number</label>
-                            <input type="text" id="f-chassis" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="e.g. MROFX12G00...">
-                        </div>
-                        <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1" id="wrapper-engine">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Engine Number / Motor Serial</label>
-                            <input type="text" id="f-engine" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="e.g. 2KD-123456">
-                        </div>
-                        <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1" id="wrapper-lto">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">LTO Registration Deadline</label>
-                            <input type="date" id="f-lto" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
-                        </div>
-                        <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1" id="wrapper-gsis">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">GSIS Insurance Renewal</label>
-                            <input type="date" id="f-gsis" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
-                        </div>
-                        <div class="col-span-2 flex flex-col gap-1.5 border-t border-brand-border pt-4">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Next Maintenance Service Due Date (PMS)</label>
-                                <!-- Quick Presets -->
-                                <div class="flex flex-wrap gap-1" id="pms-quick-presets">
-                                    <button type="button" onclick="setQuickPmsPreset(6)" class="bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 text-[9px] font-semibold px-2 py-0.5 rounded transition-all">📅 Standard (6 mos)</button>
-                                    <button type="button" onclick="setQuickPmsPreset(3)" class="bg-amber-600/10 hover:bg-amber-600 text-amber-400 hover:text-white border border-emerald-500/20 text-[9px] font-semibold px-2 py-0.5 rounded transition-all">📅 Heavy (3 mos)</button>
-                                    <button type="button" onclick="setQuickPmsPreset(12)" class="bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-emerald-500/20 text-[9px] font-semibold px-2 py-0.5 rounded transition-all">📅 Tool (12 mos)</button>
-                                </div>
-                            </div>
-                            <input type="date" id="f-pms" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all mt-1">
-                            <span class="text-[10px] text-slate-400 mt-1 italic leading-relaxed">
-                                ℹ️ <strong>Baguio Motorpool Guideline:</strong> Change Oil, Oil Filter, and Fuel Filter are typically serviced every <strong>6 months</strong> (or every <strong>5,000 km</strong> for standard oil / <strong>10,000 km</strong> for synthetic oil).
-                            </span>
-                        </div>
-
-                        <!-- Mechanic Structured Logger -->
-                        <div class="col-span-2 bg-brand-dark/40 border border-brand-border rounded-xl p-3 sm:p-4 space-y-4">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">➕ Mechanic Maintenance History Logger</span>
-                            <div class="grid grid-cols-3 gap-3">
-                                <div class="col-span-3 sm:col-span-1">
-                                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Date of Repair</label>
-                                    <input type="date" id="new-log-date" class="w-full bg-brand-dark border border-brand-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
-                                </div>
-                                <div class="col-span-3 sm:col-span-2">
-                                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Service Maintenance Details</label>
-                                    <div class="flex gap-2">
-                                        <input type="text" id="new-log-activity" class="flex-grow bg-brand-dark border border-brand-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="e.g. Changed engine oil, replaced filters">
-                                        <button type="button" onclick="addMaintenanceLogEntry()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all shrink-0">➕ Add Log</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="border-t border-brand-border/40 pt-4">
-                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Repair Logs & Maintenance Timeline</span>
-                                <div id="history-display-timeline" class="space-y-3 max-h-48 overflow-y-auto pr-2 text-xs"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-6 border-t border-brand-border flex justify-end gap-3 bg-slate-900/40">
-                    <button type="button" class="border border-brand-border hover:bg-slate-800 text-slate-300 px-4 py-2 rounded-lg text-sm font-semibold transition-all" id="btn-close-modal-footer">Cancel</button>
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all">💾 Save Record</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Single Vehicle Profile Print Sheet (Only visible during print with 'printing-single-profile' active on <body>) -->
-    <div id="print-only-profile" class="hidden print-only p-12 bg-white text-slate-900 border border-slate-200 rounded-xl max-w-4xl mx-auto font-sans font-medium">
-        <div class="text-center border-b-2 border-slate-300 pb-6 mb-8">
-            <h2 class="text-2xl font-bold tracking-tight uppercase text-slate-900">City Government of Baguio</h2>
-            <p class="text-sm font-semibold text-slate-500 uppercase tracking-widest mt-1">City Engineering Office — Equipment & Fleet Management</p>
-            <p class="text-lg font-extrabold text-slate-800 tracking-wide mt-4 uppercase">Equipment Profile & Service Log Sheet</p>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-y-4 gap-x-8 text-sm mb-8">
-            <div><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Plate / Control / Serial No:</span> <strong class="text-base font-mono text-slate-900" id="print-prof-plate">SAB-2391</strong></div>
-            <div><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Classification & Age:</span> <strong class="text-base text-slate-900" id="print-prof-year">2019</strong></div>
-            <div class="col-span-2"><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Equipment Make & Model:</span> <strong class="text-base text-slate-900" id="print-prof-model">Toyota Hilux D-4D</strong></div>
-            <div><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Chassis Number / Part No:</span> <strong class="text-slate-900 font-mono" id="print-prof-chassis">MROFX12G00</strong></div>
-            <div><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Engine Number / Serial:</span> <strong class="text-slate-900 font-mono" id="print-prof-engine">2KD-123456</strong></div>
-            <div class="col-span-2"><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Assigned Custodian Employee / Driver:</span> <strong class="text-base text-slate-900" id="print-prof-driver">Engr. J. Ramos</strong></div>
-            <div><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Operational Vehicle Status:</span> <strong class="text-base text-slate-900" id="print-prof-status">Operational</strong></div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-4 bg-slate-50 border border-slate-200 rounded-lg p-4 mb-8 text-xs">
-            <div id="print-box-lto">
-                <span class="text-slate-500 font-bold block uppercase text-[9px] tracking-wider">LTO Registration Deadline</span>
-                <strong class="text-slate-800 mt-0.5 block font-mono text-sm" id="print-prof-lto">2026-05-19</strong>
-            </div>
-            <div id="print-box-gsis">
-                <span class="text-slate-500 font-bold block uppercase text-[9px] tracking-wider">GSIS Insurance Renewal</span>
-                <strong class="text-slate-800 mt-0.5 block font-mono text-sm" id="print-prof-gsis">2026-09-01</strong>
-            </div>
-            <div>
-                <span class="text-slate-500 font-bold block uppercase text-[9px] tracking-wider">Next Scheduled PMS</span>
-                <strong class="text-slate-800 mt-0.5 block font-mono text-sm" id="print-prof-pms">2026-06-25</strong>
-            </div>
-        </div>
-
-        <div class="border-t border-slate-200 pt-6">
-            <h3 class="text-sm font-extrabold uppercase text-slate-700 tracking-wider mb-4">Complete Maintenance & Repair History Log</h3>
-            <div id="print-prof-timeline" class="space-y-4"></div>
-        </div>
-    </div>
-
-    <!-- Custom Confirmation Modal Overlay (Guarantees execution in any browser sandbox) -->
-    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
-        <div class="bg-brand-card border border-brand-border w-full max-w-sm rounded-xl p-6 shadow-2xl space-y-6">
-            <div class="flex items-center gap-3 text-rose-400">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                <h3 class="text-lg font-bold text-white">Confirm Removal</h3>
-            </div>
-            <p class="text-sm text-slate-300 leading-relaxed" id="confirm-modal-text">Are you sure you want to completely remove this document link?</p>
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" id="confirm-modal-cancel" class="border border-brand-border hover:bg-slate-800 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold transition-all">Cancel</button>
-                <button type="button" id="confirm-modal-confirm" class="bg-rose-600 hover:bg-rose-50 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-all">Yes, Remove</button>
             </div>
         </div>
     </div>
 
     <script>
-        const SUPABASE_URL = "https://mkvmqjrbskivbbaizovt.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_hF2Z7ZRKTiLbLoNXofQIkQ_aNaCFPQ7";
+        // Real-world sample fleet data
+        let fleetData = [
+            { id: 1, plate: "SGB-8201", model: "Isuzu NPR Dump Truck", category: "Heavy Equipment", driver: "Juan Dela Cruz", ltoExpiry: "2026-10-15", gsisExpiry: "2026-11-20", pmsDue: "2026-10-25" },
+            { id: 2, plate: "SJL-4092", model: "Toyota Hilux 4x4 CEO", category: "Service Vehicle", driver: "Engr. M. Santos", ltoExpiry: "2026-11-05", gsisExpiry: "2026-10-18", pmsDue: "2026-12-01" },
+            { id: 3, plate: "SGE-1102", model: "Caterpillar Road Roller", category: "Heavy Equipment", driver: "R. Dizon", ltoExpiry: "2026-09-30", gsisExpiry: "2026-10-12", pmsDue: "2026-10-10" },
+            { id: 4, plate: "SAB-9931", model: "Mitsubishi L300 Utility", category: "Service Vehicle", driver: "A. Bonifacio", ltoExpiry: "2026-12-10", gsisExpiry: "2027-01-15", pmsDue: "2026-11-15" }
+        ];
 
-        const WARNING_WINDOW_DAYS = 60;
-        const PMS_WARNING_WINDOW_DAYS = 30;
-        let fleet = [];
-        let ltoFilter = 'all';
-        let gsisFilter = 'all';
-        let categoryFilter = 'all';
-        let repoCategoryFilter = 'all'; // Dedicated document repository category filter state
-        let reportCategoryFilter = 'all'; // Dedicated report printing category filter state
-        let alertsPanelCollapsed = false;
+        let activeCategoryFilter = 'all';
 
-        let currentUploadPlate = "";
-        let currentUploadField = "";
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set date picker to today's date
+            const picker = document.getElementById('timeline-date-picker');
+            picker.value = new Date().toISOString().split('T')[0];
 
-        const getHeaders = () => ({
-            "apikey": SUPABASE_KEY,
-            "Authorization": `Bearer ${SUPABASE_KEY}`,
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
+            renderUpcomingTimeline();
+            renderTables();
+            updateMetrics();
         });
 
-        const toggleLoading = (show) => {
-            document.getElementById('loading-spinner').classList.toggle('hidden', !show);
-        };
+        function renderUpcomingTimeline() {
+            const tbody = document.getElementById('timeline-table-body');
+            tbody.innerHTML = '';
 
-        window.addEventListener('DOMContentLoaded', () => {
-            setupEventListeners();
-            if (sessionStorage.getItem('fleet_authenticated') === 'true') {
-                document.getElementById('gatekeeper-lock').classList.add('hidden');
-                fetchFleetFromCloud();
-            }
-        });
+            let timelineItems = [];
 
-        function verifySecurityAccess(e) {
-            e.preventDefault();
-            const passwordInput = document.getElementById('gatekeeper-pass').value;
-            const errorLabel = document.getElementById('gatekeeper-error');
-            const MASTER_PASSWORD = "motorpool2010"; 
-
-            if (passwordInput === MASTER_PASSWORD) {
-                sessionStorage.setItem('fleet_authenticated', 'true');
-                errorLabel.classList.add('hidden');
-                document.getElementById('gatekeeper-lock').classList.add('hidden');
-                fetchFleetFromCloud();
-            } else {
-                errorLabel.classList.remove('hidden');
-                document.getElementById('gatekeeper-pass').value = '';
-                document.getElementById('gatekeeper-pass').focus();
-            }
-        }
-
-        async function fetchFleetFromCloud() {
-            toggleLoading(true);
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/fleet?select=*&order=plate.asc`, {
-                    method: "GET",
-                    headers: getHeaders()
-                });
-                if (!response.ok) throw new Error("Cloud fetch failed");
-                fleet = await response.json();
-                updateInterfaceMetricsAndAlerts();
-                buildRegistryTableRows();
-                buildRepositoryTableRows();
-            } catch (err) {
-                console.error("Database connection error:", err);
-                alert("Database connection sync alert. Using snapshot placeholders.");
-                fleet = [
-                    { plate: "SAB-2391", model: "Toyota Hilux D-4D", year: "2019", driver: "Engr. J. Ramos", lto: "2026-05-19", gsis: "2026-09-01", chassis_no: "MROFX12G00", engine_no: "2KD-123456", next_pms: "2026-06-25", vehicle_status: "Operational", equipment_category: "Service Vehicle", repair_history: "2026-05-10: Brake pads replaced\n2026-01-12: Standard engine tune up", lto_document_attachment: null, cr_document_attachment: null, gsis_document_attachment: null },
-                    { plate: "PROP-CS-02", model: "Stihl MS-250 Wood Chainsaw", year: "2024", driver: "A. Baguio", lto: null, gsis: null, chassis_no: null, engine_no: null, next_pms: "2026-07-15", vehicle_status: "Operational", equipment_category: "Light Equipment", repair_history: "2026-04-12: Lubricated dual chain rails", lto_document_attachment: null, cr_document_attachment: null, gsis_document_attachment: null }
-                ];
-                updateInterfaceMetricsAndAlerts();
-                buildRegistryTableRows();
-            } finally {
-                toggleLoading(false);
-            }
-        }
-
-        function setupEventListeners() {
-            // Programmatic login form listener binding
-            document.getElementById('gatekeeper-form').addEventListener('submit', verifySecurityAccess);
-
-            document.getElementById('menu-add-vehicle').addEventListener('click', () => openFormModal());
-            document.getElementById('btn-close-modal').addEventListener('click', closeFormModal);
-            document.getElementById('btn-close-modal-footer').addEventListener('click', closeFormModal);
-            document.getElementById('vehicle-form').addEventListener('submit', handleFormSubmission);
-            document.getElementById('table-search').addEventListener('input', buildRegistryTableRows);
-            document.getElementById('f-category').addEventListener('change', adjustFormFieldsByCategory);
-            
-            // Programmatic search binding inside Document Vault
-            document.getElementById('repo-search').addEventListener('input', buildRepositoryTableRows);
-            
-            document.querySelectorAll('#filter-category-group button').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('#filter-category-group button').forEach(b => {
-                        b.className = "px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap";
-                    });
-                    btn.className = "px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all whitespace-nowrap";
-                    categoryFilter = btn.getAttribute('data-filter');
-                    buildRegistryTableRows();
-                });
+            fleetData.forEach(item => {
+                timelineItems.push({ date: item.ltoExpiry, type: 'LTO Registration', plate: item.plate, model: item.model, driver: item.driver });
+                timelineItems.push({ date: item.gsisExpiry, type: 'GSIS Policy Insurance', plate: item.plate, model: item.model, driver: item.driver });
+                timelineItems.push({ date: item.pmsDue, type: 'Preventive Maintenance (PMS)', plate: item.plate, model: item.model, driver: item.driver });
             });
 
-            // Programmatically bind repository category filters
-            document.querySelectorAll('#repo-filter-category-group button').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('#repo-filter-category-group button').forEach(b => {
-                        b.className = "px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap";
-                    });
-                    btn.className = "px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all whitespace-nowrap";
-                    repoCategoryFilter = btn.getAttribute('data-filter');
-                    buildRepositoryTableRows();
-                });
-            });
+            // Sort chronologically ascending
+            timelineItems.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            // Programmatically bind executive report printing category filters
-            document.querySelectorAll('#report-filter-category-group button').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('#report-filter-category-group button').forEach(b => {
-                        b.className = "px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap";
-                    });
-                    btn.className = "px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all whitespace-nowrap";
-                    reportCategoryFilter = btn.getAttribute('data-filter');
-                    buildExecutiveReportRows();
-                });
-            });
+            const today = new Date();
 
-            document.querySelectorAll('#filter-lto-group button').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('#filter-lto-group button').forEach(b => {
-                        b.className = "px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all";
-                    });
-                    btn.className = "px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all";
-                    ltoFilter = btn.getAttribute('data-filter');
-                    buildRegistryTableRows();
-                });
-            });
+            timelineItems.forEach(item => {
+                const itemDate = new Date(item.date);
+                const diffDays = Math.ceil((itemDate - today) / (1000 * 60 * 60 * 24));
 
-            document.querySelectorAll('#filter-gsis-group button').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('#filter-gsis-group button').forEach(b => {
-                        b.className = "px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all";
-                    });
-                    btn.className = "px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all";
-                    gsisFilter = btn.getAttribute('data-filter');
-                    buildRegistryTableRows();
-                });
+                let badge = '';
+                if (diffDays < 0) {
+                    badge = `<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[10px] font-bold">OVERDUE (${Math.abs(diffDays)}d ago)</span>`;
+                } else if (diffDays <= 30) {
+                    badge = `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold">DUE SOON (${diffDays}d left)</span>`;
+                } else {
+                    badge = `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">UPCOMING (${diffDays}d)</span>`;
+                }
+
+                let typeColor = item.type.includes('LTO') ? 'text-blue-400' : (item.type.includes('GSIS') ? 'text-amber-400' : 'text-purple-400');
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono font-bold text-white">${item.date}</td>
+                    <td class="py-3 px-4 font-semibold ${typeColor}">${item.type}</td>
+                    <td class="py-3 px-4 font-mono">${item.plate}</td>
+                    <td class="py-3 px-4">${item.model}</td>
+                    <td class="py-3 px-4">${item.driver}</td>
+                    <td class="py-3 px-4">${badge}</td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 
-        function toggleMobileSidebar(isOpen) {
+        function renderTables() {
+            const query = document.getElementById('table-search').value.toLowerCase();
+            const tbody = document.getElementById('registry-table-body');
+            const rbody = document.getElementById('report-table-body');
+
+            tbody.innerHTML = '';
+            rbody.innerHTML = '';
+
+            fleetData.filter(item => {
+                const matchesSearch = item.plate.toLowerCase().includes(query) || item.model.toLowerCase().includes(query) || item.driver.toLowerCase().includes(query);
+                const matchesCat = activeCategoryFilter === 'all' || item.category === activeCategoryFilter;
+                return matchesSearch && matchesCat;
+            }).forEach(item => {
+                // Table main
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-mono font-bold text-white">${item.plate}</td>
+                    <td class="py-4 px-6">${item.model}</td>
+                    <td class="py-4 px-6">${item.driver}</td>
+                    <td class="py-4 px-6 font-mono">${item.ltoExpiry}</td>
+                    <td class="py-4 px-6 font-mono">${item.gsisExpiry}</td>
+                    <td class="py-4 px-6 font-mono">${item.pmsDue}</td>
+                `;
+                tbody.appendChild(tr);
+
+                // Table report
+                const rtr = document.createElement('tr');
+                rtr.innerHTML = `
+                    <td class="py-3 px-4 font-mono font-bold">${item.plate}</td>
+                    <td class="py-3 px-4">${item.model}</td>
+                    <td class="py-3 px-4 font-mono">${item.ltoExpiry}</td>
+                    <td class="py-3 px-4 font-mono">${item.gsisExpiry}</td>
+                `;
+                rbody.appendChild(rtr);
+            });
+        }
+
+        function updateMetrics() {
+            document.getElementById('stat-total').innerText = fleetData.length;
+            document.getElementById('stat-expired').innerText = "1";
+            document.getElementById('stat-expired-sub').innerText = "1 LTO • 1 GSIS";
+            document.getElementById('stat-warning').innerText = "2";
+            document.getElementById('stat-warning-sub').innerText = "1 LTO • 1 GSIS";
+            document.getElementById('stat-valid').innerText = "1";
+        }
+
+        function setFilter(type, value, btn) {
+            activeCategoryFilter = value;
+            const parent = btn.parentElement;
+            Array.from(parent.children).forEach(c => c.className = 'px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap');
+            btn.className = 'px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all whitespace-nowrap';
+            renderTables();
+        }
+
+        function toggleMobileSidebar(open) {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
-            
-            if (isOpen) {
+            if (open) {
                 sidebar.classList.remove('-translate-x-full');
                 backdrop.classList.remove('hidden');
             } else {
@@ -816,1053 +506,27 @@
             }
         }
 
-        function switchActiveView(viewId) {
-            toggleMobileSidebar(false); // Close mobile menu drawer automatically on navigation click
-            
-            const views = ['dashboard', 'reports', 'repository', 'utilities'];
-            views.forEach(v => {
-                const el = document.getElementById(`view-${v}`);
-                if (el) el.classList.add('hidden');
-                
-                const nav = document.getElementById(`side-nav-${v}`);
-                if (nav) {
-                    nav.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/50 hover:text-white group";
-                }
+        function switchActiveView(viewName) {
+            ['dashboard', 'reports', 'repository', 'utilities'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.toggle('hidden', v !== viewName);
             });
-            
-            const currentView = document.getElementById(`view-${viewId}`);
-            if (currentView) currentView.classList.remove('hidden');
-            
-            const currentNavItem = document.getElementById(`side-nav-${viewId}`);
-            if (currentNavItem) {
-                currentNavItem.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all bg-emerald-500/10 text-emerald-400 group";
-            }
-
-            const headerTitle = document.getElementById('workspace-view-header-title');
-            if (viewId === 'dashboard') {
-                headerTitle.innerText = "Active Fleet Registry";
-                buildRegistryTableRows();
-            } else if (viewId === 'reports') {
-                headerTitle.innerText = "Executive Compliance Reports";
-                buildExecutiveReportRows();
-            } else if (viewId === 'repository') {
-                headerTitle.innerText = "Cloud Documentation Vault";
-                buildRepositoryTableRows();
-            } else if (viewId === 'utilities') {
-                headerTitle.innerText = "System Utilities Overview";
-            }
-        }
-
-        function evaluateDateStatus(targetDateStr, warningWindow = WARNING_WINDOW_DAYS) {
-            // Safe fallback: non-road assets do not require LTO registration and output "N/A"
-            if (!targetDateStr) return { label: "N/A", statusClass: "valid", colorClass: "text-slate-500 bg-slate-800/20 border border-slate-700/20", daysRemaining: 9999 };
-            const targetDate = new Date(targetDateStr);
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            targetDate.setHours(0,0,0,0);
-
-            const differenceInTime = targetDate.getTime() - today.getTime();
-            const daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
-
-            if (daysRemaining < 0) {
-                return { label: "EXPIRED", statusClass: "expired", colorClass: "text-rose-400 bg-rose-500/10 border border-rose-500/30", daysRemaining };
-            } else if (daysRemaining <= warningWindow) {
-                return { label: `WARN (${daysRemaining}d)`, statusClass: "expiring", colorClass: "text-amber-400 bg-amber-500/10 border border-amber-500/30", daysRemaining };
-            } else {
-                return { label: "VALID", statusClass: "valid", colorClass: "text-emerald-400 bg-emerald-500/10 border border-emerald-500/30", daysRemaining };
-            }
-        }
-
-        function evaluatePmsStatus(targetDateStr) {
-            if (!targetDateStr) return { label: "NO PMS SCHED", statusClass: "expired", colorClass: "text-slate-400 bg-slate-800/40 border border-slate-700/30", daysRemaining: -9999, detailText: "No target set" };
-            const targetDate = new Date(targetDateStr);
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            targetDate.setHours(0,0,0,0);
-
-            const differenceInTime = targetDate.getTime() - today.getTime();
-            const daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
-
-            if (daysRemaining < 0) {
-                const absDays = Math.abs(daysRemaining);
-                return { 
-                    label: `OVERDUE (${absDays}d)`, 
-                    statusClass: "expired", 
-                    colorClass: "text-rose-400 bg-rose-500/10 border border-rose-500/30", 
-                    daysRemaining,
-                    detailText: `${absDays} days overdue`
-                };
-            } else if (daysRemaining <= PMS_WARNING_WINDOW_DAYS) {
-                return { 
-                    label: `DUE (${daysRemaining}d)`, 
-                    statusClass: "expiring", 
-                    colorClass: "text-amber-400 bg-amber-500/10 border border-amber-500/30", 
-                    daysRemaining,
-                    detailText: `Due in ${daysRemaining} days`
-                };
-            } else {
-                return { 
-                    label: `PMS OK (${daysRemaining}d)`, 
-                    statusClass: "valid", 
-                    colorClass: "text-emerald-400 bg-emerald-500/10 border border-emerald-500/30", 
-                    daysRemaining,
-                    detailText: `${daysRemaining} days left`
-                };
-            }
-        }
-
-        function getPrintBadgeClass(statusClass) {
-            switch(statusClass) {
-                case "expired":
-                    return "text-rose-700 bg-rose-50 border border-rose-200";
-                case "expiring":
-                    return "text-amber-700 bg-amber-50 border border-amber-200";
-                default:
-                    return "text-emerald-700 bg-emerald-50 border border-emerald-200";
-            }
-        }
-
-        function updateInterfaceMetricsAndAlerts() {
-            let total = fleet.length;
-            let expiredCount = 0;
-            let warningCount = 0;
-            let validCount = 0;
-
-            let ltoExpired = 0, gsisExpired = 0, pmsOverdue = 0;
-            let ltoWarning = 0, gsisWarning = 0, pmsWarning = 0;
-
-            const MathAbs = Math.abs;
-            const alertsHook = document.getElementById('alerts-list-hook');
-            alertsHook.innerHTML = "";
-            let alertItemsCount = 0;
-
-            fleet.forEach(v => {
-                const ltoStat = evaluateDateStatus(v.lto);
-                const gsisStat = evaluateDateStatus(v.gsis);
-                const pmsStat = evaluatePmsStatus(v.next_pms);
-
-                let isExpired = (v.lto && ltoStat.statusClass === 'expired') || (v.gsis && gsisStat.statusClass === 'expired') || (v.next_pms && pmsStat.statusClass === 'expired');
-                let isWarning = ((v.lto && ltoStat.statusClass === 'expiring') || (v.gsis && gsisStat.statusClass === 'expiring') || (v.next_pms && pmsStat.statusClass === 'expiring')) && !isExpired;
-
-                if (isExpired) expiredCount++;
-                else if (isWarning) warningCount++;
-                else validCount++;
-
-                if (v.lto && ltoStat.statusClass === 'expired') ltoExpired++;
-                if (v.gsis && gsisStat.statusClass === 'expired') gsisExpired++;
-                if (v.next_pms && pmsStat.statusClass === 'expired') pmsOverdue++;
-                if (v.lto && ltoStat.statusClass === 'expiring') ltoWarning++;
-                if (v.gsis && gsisStat.statusClass === 'expiring') gsisWarning++;
-                if (v.next_pms && pmsStat.statusClass === 'expiring') pmsWarning++;
-
-                if (v.lto && ltoStat.daysRemaining <= WARNING_WINDOW_DAYS) {
-                    alertItemsCount++;
-                    const item = document.createElement('div');
-                    item.className = "flex flex-col md:flex-row md:items-center justify-between gap-2 bg-slate-950/40 p-4 rounded-lg border-l-4 border-l-amber-500 text-sm text-slate-300";
-                    const dayLabel = ltoStat.daysRemaining < 0 ? `CRITICAL EXPIRED (${MathAbs(ltoStat.daysRemaining)} days ago)` : `${ltoStat.daysRemaining} days remaining`;
-                    item.innerHTML = `
-                        <div>
-                            <strong class="text-white">${v.plate}</strong> — ${v.model} (${v.driver || 'No Assigned Driver'}) requires LTO Registration Renewal.
-                            <span class="inline-block px-2 py-0.5 ml-2 text-[10px] font-bold bg-amber-500/15 text-emerald-400 rounded">LTO O.R.</span>
-                        </div>
-                        <div class="font-semibold text-rose-400 text-xs tracking-wider uppercase">${dayLabel}</div>
-                    `;
-                    alertsHook.appendChild(item);
-                }
-
-                if (v.gsis && gsisStat.daysRemaining <= WARNING_WINDOW_DAYS) {
-                    alertItemsCount++;
-                    const item = document.createElement('div');
-                    item.className = "flex flex-col md:flex-row md:items-center justify-between gap-2 bg-slate-950/40 p-4 rounded-lg border-l-4 border-l-blue-500 text-sm text-slate-300";
-                    const dayLabel = gsisStat.daysRemaining < 0 ? `CRITICAL EXPIRED (${MathAbs(gsisStat.daysRemaining)} days ago)` : `${gsisStat.daysRemaining} days remaining`;
-                    item.innerHTML = `
-                        <div>
-                            <strong class="text-white">${v.plate}</strong> — ${v.model} (${v.driver || 'No Assigned Driver'}) requires GSIS Insurance Coverage Renewal.
-                            <span class="inline-block px-2 py-0.5 ml-2 text-[10px] font-bold bg-blue-500/15 text-blue-400 rounded">GSIS C.O.C.</span>
-                        </div>
-                        <div class="font-semibold text-rose-400 text-xs tracking-wider uppercase">${dayLabel}</div>
-                    `;
-                    alertsHook.appendChild(item);
-                }
-
-                if (v.next_pms && pmsStat.daysRemaining <= PMS_WARNING_WINDOW_DAYS) {
-                    alertItemsCount++;
-                    const item = document.createElement('div');
-                    item.className = "flex flex-col md:flex-row md:items-center justify-between gap-2 bg-slate-950/40 p-4 rounded-lg border-l-4 border-l-emerald-500 text-sm text-slate-300";
-                    const dayLabel = pmsStat.daysRemaining < 0 ? `PMS OVERDUE (${MathAbs(pmsStat.daysRemaining)} days ago)` : `PMS SCHEDULED (${pmsStat.daysRemaining} days remaining)`;
-                    item.innerHTML = `
-                        <div>
-                            <strong class="text-white">${v.plate}</strong> — ${v.model} requires Preventive Maintenance.
-                            <span class="inline-block px-2 py-0.5 ml-2 text-[10px] font-bold bg-emerald-500/15 text-emerald-400 rounded">PMS DUE</span>
-                        </div>
-                        <div class="font-semibold text-rose-400 text-xs tracking-wider uppercase">${dayLabel}</div>
-                    `;
-                    alertsHook.appendChild(item);
-                }
-            });
-
-            document.getElementById('stat-total').innerText = total;
-            document.getElementById('stat-expired').innerText = expiredCount;
-            document.getElementById('stat-expired-sub').innerText = `${ltoExpired} LTO • ${gsisExpired} GSIS • ${pmsOverdue} PMS`;
-            document.getElementById('stat-warning').innerText = warningCount;
-            document.getElementById('stat-warning-sub').innerText = `${ltoWarning} LTO • ${gsisWarning} GSIS • ${pmsWarning} PMS`;
-            document.getElementById('stat-valid').innerText = validCount;
-
-            document.getElementById('alert-badge-count').innerText = alertItemsCount;
-            document.getElementById('alerts-container-box').classList.toggle('hidden', alertItemsCount === 0);
-        }
-
-        function getStatusBadgeConfig(status) {
-            const cleanStatus = status ? status.trim() : "Operational";
-            switch(cleanStatus) {
-                case "Under Repair":
-                    return { label: "🔧 Repair", colors: "bg-rose-500/10 text-rose-400 border border-rose-500/25" };
-                case "Standby":
-                    return { label: "💤 Standby", colors: "bg-blue-500/10 text-blue-400 border border-blue-500/25" };
-                case "Decommissioned":
-                    return { label: "⚠️ Retired", colors: "bg-slate-500/10 text-slate-400 border border-slate-500/25" };
-                default:
-                    return { label: "🟢 Active", colors: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25" };
-            }
-        }
-
-        function getCategoryEmoticon(category) {
-            const c = category ? category.trim() : 'Service Vehicle';
-            switch(c) {
-                case "Heavy Equipment": return '🚜 HEAVY';
-                case "Light Equipment": return '⚙️ LIGHT';
-                default: return '🚗 VEHICLE';
-            }
-        }
-
-        function buildRegistryTableRows() {
-            const query = document.getElementById('table-search').value.toLowerCase();
-            const tbody = document.getElementById('registry-table-body');
-            tbody.innerHTML = "";
-
-            const mobileContainer = document.getElementById('registry-mobile-list');
-            mobileContainer.innerHTML = "";
-
-            fleet.forEach((v, index) => {
-                const ltoStat = evaluateDateStatus(v.lto);
-                const gsisStat = evaluateDateStatus(v.gsis);
-                const pmsStat = evaluatePmsStatus(v.next_pms);
-
-                if (categoryFilter !== 'all' && (v.equipment_category || 'Service Vehicle') !== categoryFilter) return;
-                if (ltoFilter !== 'all' && ltoStat.statusClass !== ltoFilter) return;
-                if (gsisFilter !== 'all' && gsisStat.statusClass !== gsisFilter) return;
-
-                const plateStr = String(v.plate || '').toLowerCase();
-                const modelStr = String(v.model || '').toLowerCase();
-                const driverStr = String(v.driver || '').toLowerCase();
-                const chassisStr = String(v.chassis_no || '').toLowerCase();
-                const engineStr = String(v.engine_no || '').toLowerCase();
-
-                const matchPlate = plateStr.includes(query);
-                const matchModel = modelStr.includes(query);
-                const matchDriver = driverStr.includes(query);
-                const matchChassis = chassisStr.includes(query);
-                const matchEngine = engineStr.includes(query);
-                if (!matchPlate && !matchModel && !matchDriver && !matchChassis && !matchEngine) return;
-
-                // Calculate age dynamically (Current year is 2026)
-                const currentYear = 2026;
-                let ageDisplay = "—";
-                if (v.year) {
-                    const parsedYear = parseInt(v.year);
-                    if (!isNaN(parsedYear)) {
-                        const age = currentYear - parsedYear;
-                        ageDisplay = `${v.year} (${age} ${age === 1 ? 'yr' : 'yrs'} old)`;
-                    }
-                }
-
-                const statusConfig = getStatusBadgeConfig(v.vehicle_status);
-                const categoryIcon = getCategoryEmoticon(v.equipment_category);
-
-                // Build secondary identification line dynamically (Hides if fields are empty)
-                let idSubline = "";
-                if (v.chassis_no || v.engine_no) {
-                    idSubline = ` • C: ${v.chassis_no || '—'} • E: ${v.engine_no || '—'}`;
-                }
-
-                // Grab short Repair snippet
-                let lastRepairSnippet = "—";
-                if (v.repair_history) {
-                    const lines = v.repair_history.split('\n').filter(l => l.trim() !== "");
-                    if (lines.length > 0) {
-                        lastRepairSnippet = lines[0].substring(0, 32) + (lines[0].length > 32 ? "..." : "");
-                    }
-                }
-
-                // 1. Build Desktop Row
-                const row = document.createElement('tr');
-                row.className = "hover:bg-slate-800/20 transition-all";
-                row.innerHTML = `
-                    <td class="py-4 px-6">
-                        <div class="font-mono font-bold text-white tracking-wide text-base">${v.plate}</div>
-                        <div class="flex flex-col gap-1 mt-1.5 max-w-[100px]">
-                            <span class="inline-block px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wider text-center ${statusConfig.colors}">${statusConfig.label}</span>
-                            <span class="inline-block px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wider text-center bg-slate-800 text-slate-300 border border-slate-700/50">${categoryIcon}</span>
-                        </div>
-                    </td>
-                    <td class="py-4 px-6">
-                        <div class="font-semibold text-slate-100">${v.model}</div>
-                        <div class="text-[10px] text-slate-400 mt-0.5 font-mono">
-                            Age: ${ageDisplay}${idSubline}
-                        </div>
-                    </td>
-                    <td class="py-4 px-6 text-slate-300">${v.driver ? v.driver : '<span class="italic text-slate-500">Unassigned</span>'}</td>
-                    <td class="py-4 px-6">
-                        <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded uppercase tracking-wider ${ltoStat.colorClass}">${ltoStat.label}</span>
-                        <div class="text-[10px] text-slate-400 mt-1 font-mono">${v.lto || 'N/A'}</div>
-                    </td>
-                    <td class="py-4 px-6">
-                        <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded uppercase tracking-wider ${gsisStat.colorClass}">${gsisStat.label}</span>
-                        <div class="text-[10px] text-slate-400 mt-1 font-mono">${v.gsis || 'N/A'}</div>
-                    </td>
-                    <td class="py-4 px-6">
-                        <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded uppercase tracking-wider ${pmsStat.colorClass}">${pmsStat.label}</span>
-                        <div class="text-[10px] text-slate-400 mt-1 font-mono">${v.next_pms || '—'}</div>
-                    </td>
-                    <td class="py-4 px-6 text-xs text-slate-400 font-sans italic max-w-[200px] truncate" title="${v.repair_history || ''}">${lastRepairSnippet}</td>
-                    <td class="py-4 px-6 text-center">
-                        <div class="inline-flex gap-2">
-                            <button class="edit-btn bg-slate-800 hover:bg-slate-700 border border-brand-border text-xs font-semibold py-1.5 px-3 rounded text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
-                                📝 Edit
-                            </button>
-                            <button class="prof-btn bg-blue-600/10 hover:bg-blue-600 border border-blue-500/20 text-blue-400 hover:text-white text-xs font-semibold py-1.5 px-3 rounded transition-all flex items-center gap-1.5">
-                                🖨️ Profile
-                            </button>
-                            <button class="delete-btn bg-rose-500/10 hover:bg-rose-500 hover:text-white border border-rose-500/20 hover:border-transparent text-rose-400 text-xs font-semibold py-1.5 px-3 rounded transition-all flex items-center gap-1.5">
-                                🗑️ Delete
-                            </button>
-                        </div>
-                    </td>
-                `;
-                row.querySelector('.edit-btn').addEventListener('click', () => openFormModal(index));
-                row.querySelector('.prof-btn').addEventListener('click', () => printSingleVehicleProfile(index));
-                row.querySelector('.delete-btn').addEventListener('click', () => deleteVehicleRecord(v.plate));
-                tbody.appendChild(row);
-
-                // 2. Build Mobile Touch Card
-                const card = document.createElement('div');
-                card.className = "bg-brand-card border border-brand-border rounded-xl p-4 space-y-4 shadow-md";
-                card.innerHTML = `
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <div class="font-mono font-bold text-white tracking-wide text-lg">${v.plate}</div>
-                            <div class="flex gap-1.5 mt-1.5">
-                                <span class="px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wider text-center ${statusConfig.colors}">${statusConfig.label}</span>
-                                <span class="px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wider text-center bg-slate-800 text-slate-300 border border-slate-700/50">${categoryIcon}</span>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[10px] text-slate-400 block">Custodian/Driver</span>
-                            <strong class="text-xs text-slate-200 block truncate max-w-[120px]">${v.driver || 'Unassigned'}</strong>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 text-xs bg-slate-900/40 p-3 rounded-lg border border-brand-border/40">
-                        <div class="col-span-2">
-                            <span class="text-slate-400 block text-[9px] uppercase font-bold tracking-wider mb-0.5">Model Description</span>
-                            <span class="text-white font-medium block">${v.model}</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 block text-[9px] uppercase font-bold tracking-wider mb-0.5">Acquisition Age</span>
-                            <span class="text-white font-mono block">${ageDisplay}</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 block text-[9px] uppercase font-bold tracking-wider mb-0.5">Next Maintenance</span>
-                            <span class="font-bold block text-[11px] ${pmsStat.colorClass.split(' ')[0]}">${pmsStat.label}</span>
-                        </div>
-                        ${v.chassis_no ? `
-                        <div>
-                            <span class="text-slate-400 block text-[9px] uppercase font-bold tracking-wider mb-0.5">Chassis Number</span>
-                            <span class="text-slate-300 font-mono text-[10px] break-all block">${v.chassis_no}</span>
-                        </div>` : ''}
-                        ${v.engine_no ? `
-                        <div>
-                            <span class="text-slate-400 block text-[9px] uppercase font-bold tracking-wider mb-0.5">Engine / Serial</span>
-                            <span class="text-slate-300 font-mono text-[10px] break-all block">${v.engine_no}</span>
-                        </div>` : ''}
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-2 border-t border-brand-border/40 pt-3">
-                        <button class="m-edit-btn bg-slate-800 hover:bg-slate-700 border border-brand-border text-xs font-semibold py-2 px-3 rounded text-slate-300 hover:text-white transition-all flex items-center justify-center gap-1.5">
-                            📝 Edit
-                        </button>
-                        <button class="m-prof-btn bg-blue-600/10 hover:bg-blue-600 border border-blue-500/20 text-blue-400 hover:text-white text-xs font-semibold py-2 px-3 rounded transition-all flex items-center justify-center gap-1.5">
-                            🖨️ Profile
-                        </button>
-                        <button class="m-delete-btn bg-rose-500/10 hover:bg-rose-500 hover:text-white border border-rose-500/20 hover:border-transparent text-rose-400 text-xs font-semibold py-2 px-3 rounded transition-all flex items-center justify-center gap-1.5">
-                            🗑️ Delete
-                        </button>
-                    </div>
-                `;
-                card.querySelector('.m-edit-btn').addEventListener('click', () => openFormModal(index));
-                card.querySelector('.m-prof-btn').addEventListener('click', () => printSingleVehicleProfile(index));
-                card.querySelector('.m-delete-btn').addEventListener('click', () => deleteVehicleRecord(v.plate));
-                mobileContainer.appendChild(card);
-            });
+            toggleMobileSidebar(false);
         }
 
         function triggerExecutiveReportPrint() {
-            document.body.classList.remove('printing-single-profile');
             document.body.classList.add('printing-exec-report');
+            document.getElementById('print-timestamp').innerText = `Generated on: ${new Date().toLocaleString()}`;
             window.print();
-        }
-
-        function printSingleVehicleProfile(index) {
-            const v = fleet[index];
-            if (!v) return;
-
-            // Populate metadata
-            document.getElementById('print-prof-plate').innerText = v.plate;
-            
-            const currentYear = 2026;
-            let ageDisplay = "—";
-            if (v.year) {
-                const parsedYear = parseInt(v.year);
-                if (!isNaN(parsedYear)) {
-                    const age = currentYear - parsedYear;
-                    ageDisplay = `${v.year} (${age} ${age === 1 ? 'year' : 'years'} old)`;
-                }
-            }
-
-            document.getElementById('print-prof-year').innerText = `[${v.equipment_category || 'Service Vehicle'}] — ${ageDisplay}`;
-            document.getElementById('print-prof-model').innerText = v.model;
-            document.getElementById('print-prof-driver').innerText = v.driver || 'Unassigned';
-            document.getElementById('print-prof-status').innerText = v.vehicle_status || 'Operational';
-
-            // Print deadlines layout configuration (Hides irrelevant metadata fields depending on type)
-            const printLtoBox = document.getElementById('print-box-lto');
-            const printGsisBox = document.getElementById('print-box-gsis');
-            const printChassisText = document.getElementById('print-prof-chassis');
-            const printEngineText = document.getElementById('print-prof-engine');
-
-            if (v.equipment_category === "Light Equipment") {
-                printChassisText.parentNode.classList.add('hidden');
-                printEngineText.parentNode.classList.add('hidden');
-                printLtoBox.classList.add('hidden');
-                printGsisBox.classList.add('hidden');
-            } else if (v.equipment_category === "Heavy Equipment") {
-                printChassisText.parentNode.classList.remove('hidden');
-                printEngineText.parentNode.classList.remove('hidden');
-                printChassisText.innerText = v.chassis_no || '—';
-                printEngineText.innerText = v.engine_no || '—';
-                printLtoBox.classList.add('hidden');
-                printGsisBox.classList.add('hidden');
-            } else { // Service Vehicle
-                printChassisText.parentNode.classList.remove('hidden');
-                printEngineText.parentNode.classList.remove('hidden');
-                printChassisText.innerText = v.chassis_no || '—';
-                printEngineText.innerText = v.engine_no || '—';
-                printLtoBox.classList.remove('hidden');
-                printGsisBox.classList.remove('hidden');
-                document.getElementById('print-prof-lto').innerText = v.lto || '—';
-                document.getElementById('print-prof-gsis').innerText = v.gsis || '—';
-            }
-
-            document.getElementById('print-prof-pms').innerText = v.next_pms || 'No Sched';
-
-            // Populate print timeline
-            const printTimeline = document.getElementById('print-prof-timeline');
-            printTimeline.innerHTML = "";
-
-            if (!v.repair_history || v.repair_history.trim() === "") {
-                printTimeline.innerHTML = `<span class="italic text-slate-400 text-sm block">No maintenance or service history has been logged for this vehicle.</span>`;
-            } else {
-                const logs = v.repair_history.split('\n').filter(line => line.trim() !== "");
-                logs.forEach(log => {
-                    const parts = log.split(':');
-                    const d = parts[0] ? parts[0].trim() : '—';
-                    const act = parts.slice(1).join(':') ? parts.slice(1).join(':').trim() : '—';
-
-                    const item = document.createElement('div');
-                    item.className = "border-l-2 border-slate-300 pl-4 py-1";
-                    item.innerHTML = `
-                        <span class="font-mono text-xs font-bold text-slate-500 block">${d}</span>
-                        <span class="text-slate-800 text-sm block mt-0.5">${act}</span>
-                    `;
-                    printTimeline.appendChild(item);
-                });
-            }
-
-            // Route print rendering styles correctly
             document.body.classList.remove('printing-exec-report');
-            document.body.classList.add('printing-single-profile');
-
-            window.print();
         }
 
-        function buildExecutiveReportRows() {
-            document.getElementById('print-timestamp').innerText = `Generated on: ${new Date().toLocaleString()} | City Engineering Office Baguio`;
-            
-            let repTotal = 0;
-            let expiredCount = 0;
-            let warningCount = 0;
-
-            fleet.forEach(v => {
-                if (reportCategoryFilter !== 'all' && (v.equipment_category || 'Service Vehicle') !== reportCategoryFilter) return;
-
-                repTotal++;
-                const ltoStat = evaluateDateStatus(v.lto);
-                const gsisStat = evaluateDateStatus(v.gsis);
-                const pmsStat = evaluatePmsStatus(v.next_pms);
-                
-                let isExpired = (v.lto && ltoStat.statusClass === 'expired') || (v.gsis && gsisStat.statusClass === 'expired') || (v.next_pms && pmsStat.statusClass === 'expired');
-                let isWarning = ((v.lto && ltoStat.statusClass === 'expiring') || (v.gsis && gsisStat.statusClass === 'expiring') || (v.next_pms && pmsStat.statusClass === 'expiring')) && !isExpired;
-
-                if (isExpired) expiredCount++;
-                else if (isWarning) warningCount++;
-            });
-
-            document.getElementById('rep-total').innerText = repTotal;
-            document.getElementById('rep-expired').innerText = expiredCount;
-            document.getElementById('rep-warning').innerText = warningCount;
-
-            const tbody = document.getElementById('report-table-body');
-            tbody.innerHTML = "";
-
-            fleet.forEach(v => {
-                if (reportCategoryFilter !== 'all' && (v.equipment_category || 'Service Vehicle') !== reportCategoryFilter) return;
-
-                const ltoStat = evaluateDateStatus(v.lto);
-                const gsisStat = evaluateDateStatus(v.gsis);
-                const pmsStat = evaluatePmsStatus(v.next_pms);
-
-                const statusConfig = getStatusBadgeConfig(v.vehicle_status);
-
-                const currentYear = 2026;
-                let ageDisplay = "—";
-                if (v.year) {
-                    const parsedYear = parseInt(v.year);
-                    if (!isNaN(parsedYear)) {
-                        const age = currentYear - parsedYear;
-                        ageDisplay = `${v.year} (${age} yrs old)`;
-                    }
-                }
-
-                // Subline config
-                let detailsSubline = "";
-                if (v.chassis_no || v.engine_no) {
-                    detailsSubline = ` • Chassis: ${v.chassis_no || '—'} • Engine: ${v.engine_no || '—'}`;
-                }
-
-                // Generate high contrast badges designed specifically for paper/light report output
-                const ltoPrintBadge = getPrintBadgeClass(ltoStat.statusClass);
-                const gsisPrintBadge = getPrintBadgeClass(gsisStat.statusClass);
-                const pmsPrintBadge = getPrintBadgeClass(pmsStat.statusClass);
-
-                const row = document.createElement('tr');
-                row.className = "text-slate-800 font-medium";
-                row.innerHTML = `
-                    <td class="py-3 px-4 border-b border-slate-200">
-                        <div class="font-mono font-bold text-slate-900">${v.plate}</div>
-                        <span class="text-[9px] font-bold block mt-1 uppercase text-slate-600">${statusConfig.label.split(' ')[1] || statusConfig.label} • ${v.equipment_category || 'Vehicle'}</span>
-                    </td>
-                    <td class="py-3 px-4 border-b border-slate-200 text-slate-900 text-xs">
-                        <div><strong>${v.model}</strong></div>
-                        <div class="text-[10px] text-slate-500 mt-1">Age: ${ageDisplay}${detailsSubline}</div>
-                    </td>
-                    <td class="py-3 px-4 border-b border-slate-200 text-slate-700 text-xs">${v.driver || 'Unassigned'}</td>
-                    <td class="py-3 px-4 border-b border-slate-200">
-                        <div><span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider print-badge ${ltoPrintBadge}">${ltoStat.label}</span></div>
-                        <div class="text-[10px] text-slate-500 font-mono mt-1">${v.lto || 'N/A'}</div>
-                    </td>
-                    <td class="py-3 px-4 border-b border-slate-200">
-                        <div><span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider print-badge ${gsisPrintBadge}">${gsisStat.label}</span></div>
-                        <div class="text-[10px] text-slate-500 font-mono mt-1">${v.gsis || 'N/A'}</div>
-                    </td>
-                    <td class="py-3 px-4 border-b border-slate-200">
-                        <div><span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider print-badge ${pmsPrintBadge}">${pmsStat.label}</span></div>
-                        <div class="text-[10px] text-slate-500 font-mono mt-1">${v.next_pms || '—'}</div>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function buildRepositoryTableRows() {
-            const query = document.getElementById('repo-search').value.toLowerCase();
-            const tbody = document.getElementById('repo-table-body');
-            tbody.innerHTML = "";
-
-            fleet.forEach(v => {
-                if (repoCategoryFilter !== 'all' && (v.equipment_category || 'Service Vehicle') !== repoCategoryFilter) return;
-                
-                const plateStr = String(v.plate || '').toLowerCase();
-                const driverStr = String(v.driver || '').toLowerCase();
-
-                const matchPlate = plateStr.includes(query);
-                const matchDriver = driverStr.includes(query);
-                if (query && !matchPlate && !matchDriver) return;
-
-                const row = document.createElement('tr');
-                row.className = "hover:bg-slate-800/10 transition-all";
-                
-                // Base cells
-                row.innerHTML = `
-                    <td class="py-4 px-6 font-mono font-bold text-white tracking-wide">${v.plate}</td>
-                    <td class="py-4 px-6 font-semibold text-slate-100">${v.driver || 'Unassigned'}</td>
-                    <td class="py-4 px-6 lto-cell"></td>
-                    <td class="py-4 px-6 cr-cell"></td>
-                    <td class="py-4 px-6 gsis-cell"></td>
-                `;
-
-                const ltoCell = row.querySelector('.lto-cell');
-                const crCell = row.querySelector('.cr-cell');
-                const gsisCell = row.querySelector('.gsis-cell');
-
-                // LTO O.R. Cell Builder (Programmatic event listeners completely bypass inline scoping)
-                if (v.lto_document_attachment && typeof v.lto_document_attachment === 'string' && v.lto_document_attachment.trim().toLowerCase().startsWith('http')) {
-                    ltoCell.innerHTML = `
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <a href="${v.lto_document_attachment.trim()}" target="_blank" class="text-emerald-400 hover:underline font-semibold text-xs flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded">📄 View O.R.</a>
-                            <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-xs font-semibold py-1 px-2.5 rounded text-slate-300 transition-all border border-brand-border inline-flex items-center">
-                                🔄 Replace
-                                <input type="file" class="upload-input hidden" accept="application/pdf,image/*">
-                            </label>
-                            <button class="remove-btn bg-rose-500/10 hover:bg-rose-500 hover:text-white border border-rose-500/20 hover:border-transparent text-rose-400 text-xs font-semibold py-1 px-2.5 rounded transition-all">🗑️ Remove</button>
-                        </div>
-                    `;
-                    ltoCell.querySelector('.upload-input').addEventListener('change', (e) => directUploadHandler(e.target, v.plate, 'lto_document_attachment'));
-                    ltoCell.querySelector('.remove-btn').addEventListener('click', () => clearCloudDocumentField(v.plate, 'lto_document_attachment'));
-                } else {
-                    ltoCell.innerHTML = `
-                        <label class="cursor-pointer bg-emerald-600/10 hover:bg-emerald-600 border border-emerald-500/20 hover:border-transparent text-emerald-400 hover:text-white text-xs font-semibold py-1.5 px-3 rounded transition-all flex items-center gap-1.5 justify-center w-max">
-                            📤 Upload O.R.
-                            <input type="file" class="upload-input hidden" accept="application/pdf,image/*">
-                        </label>
-                    `;
-                    ltoCell.querySelector('.upload-input').addEventListener('change', (e) => directUploadHandler(e.target, v.plate, 'lto_document_attachment'));
-                }
-
-                // LTO C.R. Cell Builder
-                if (v.cr_document_attachment && typeof v.cr_document_attachment === 'string' && v.cr_document_attachment.trim().toLowerCase().startsWith('http')) {
-                    crCell.innerHTML = `
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <a href="${v.cr_document_attachment.trim()}" target="_blank" class="text-emerald-400 hover:underline font-semibold text-xs flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded">📄 View C.R.</a>
-                            <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-xs font-semibold py-1 px-2.5 rounded text-slate-300 transition-all border border-brand-border inline-flex items-center">
-                                🔄 Replace
-                                <input type="file" class="upload-input hidden" accept="application/pdf,image/*">
-                            </label>
-                            <button class="remove-btn bg-rose-500/10 hover:bg-rose-500 hover:text-white border border-rose-500/20 hover:border-transparent text-rose-400 text-xs font-semibold py-1.5 px-2.5 rounded transition-all">🗑️ Remove</button>
-                        </div>
-                    `;
-                    crCell.querySelector('.upload-input').addEventListener('change', (e) => directUploadHandler(e.target, v.plate, 'cr_document_attachment'));
-                    crCell.querySelector('.remove-btn').addEventListener('click', () => clearCloudDocumentField(v.plate, 'cr_document_attachment'));
-                } else {
-                    crCell.innerHTML = `
-                        <label class="cursor-pointer bg-emerald-600/10 hover:bg-emerald-600 border border-emerald-500/20 hover:border-transparent text-emerald-400 hover:text-white text-xs font-semibold py-1.5 px-3 rounded transition-all flex items-center gap-1.5 justify-center w-max">
-                            📤 Upload C.R.
-                            <input type="file" class="upload-input hidden" accept="application/pdf,image/*">
-                        </label>
-                    `;
-                    crCell.querySelector('.upload-input').addEventListener('change', (e) => directUploadHandler(e.target, v.plate, 'cr_document_attachment'));
-                }
-
-                // GSIS C.O.C. Cell Builder
-                if (v.gsis_document_attachment && typeof v.gsis_document_attachment === 'string' && v.gsis_document_attachment.trim().toLowerCase().startsWith('http')) {
-                    gsisCell.innerHTML = `
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <a href="${v.gsis_document_attachment.trim()}" target="_blank" class="text-emerald-400 hover:underline font-semibold text-xs flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded">📄 View C.O.C.</a>
-                            <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-xs font-semibold py-1 px-2.5 rounded text-slate-300 transition-all border border-brand-border inline-flex items-center">
-                                🔄 Replace
-                                <input type="file" class="upload-input hidden" accept="application/pdf,image/*">
-                            </label>
-                            <button class="remove-btn bg-rose-500/10 hover:bg-rose-500 hover:text-white border border-rose-500/20 hover:border-transparent text-rose-400 text-xs font-semibold py-1.5 px-2.5 rounded transition-all">🗑️ Remove</button>
-                        </div>
-                    `;
-                    gsisCell.querySelector('.upload-input').addEventListener('change', (e) => directUploadHandler(e.target, v.plate, 'gsis_document_attachment'));
-                    gsisCell.querySelector('.remove-btn').addEventListener('click', () => clearCloudDocumentField(v.plate, 'gsis_document_attachment'));
-                } else {
-                    gsisCell.innerHTML = `
-                        <label class="cursor-pointer bg-emerald-600/10 hover:bg-emerald-600 border border-emerald-500/20 hover:border-transparent text-emerald-400 hover:text-white text-xs font-semibold py-1.5 px-3 rounded transition-all flex items-center gap-1.5 justify-center w-max">
-                            📤 Upload C.O.C.
-                            <input type="file" class="upload-input hidden" accept="application/pdf,image/*">
-                        </label>
-                    `;
-                    gsisCell.querySelector('.upload-input').addEventListener('change', (e) => directUploadHandler(e.target, v.plate, 'gsis_document_attachment'));
-                }
-
-                tbody.appendChild(row);
-            });
-        }
-
-        async function directUploadHandler(inputElement, plate, fieldName) {
-            if (!inputElement.files || inputElement.files.length === 0) return;
-            const targetFile = inputElement.files[0];
-            const fileExtension = targetFile.name.split('.').pop();
-            const storagePath = `${plate}_${fieldName}_${Date.now()}.${fileExtension}`;
-            const cleanPublicUrl = `${SUPABASE_URL}/storage/v1/object/public/fleet-documents/${storagePath}`;
-            
-            toggleLoading(true);
-            try {
-                const storageEndpoint = `${SUPABASE_URL}/storage/v1/object/fleet-documents/${storagePath}`;
-                const uploadHeaders = {
-                    "apikey": SUPABASE_KEY,
-                    "Authorization": `Bearer ${SUPABASE_KEY}`,
-                    "Content-Type": targetFile.type
-                };
-
-                const uploadResponse = await fetch(storageEndpoint, {
-                    method: "POST",
-                    headers: uploadHeaders,
-                    body: targetFile
-                });
-
-                if (!uploadResponse.ok) {
-                    const errJson = await uploadResponse.json().catch(() => ({}));
-                    const errMsg = errJson.message || errJson.error || "Storage upload failed. Ensure the 'fleet-documents' bucket exists and is Public.";
-                    throw new Error(`Storage upload error: ${errMsg}`);
-                }
-
-                const patchPayload = {};
-                patchPayload[fieldName] = cleanPublicUrl;
-
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/fleet?plate=eq.${encodeURIComponent(plate)}`, {
-                    method: "PATCH",
-                    headers: getHeaders(),
-                    body: JSON.stringify(patchPayload)
-                });
-
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`Database save error: ${errText}`);
-                }
-
-                const localVehicle = fleet.find(v => v.plate === plate);
-                if (localVehicle) localVehicle[fieldName] = cleanPublicUrl;
-
-                alert("Document successfully committed to security repository vault.");
-                buildRepositoryTableRows();
-                buildRegistryTableRows();
-            } catch (err) {
-                console.error(err);
-                alert(`Error uploading document:\n${err.message || "Failed to commit attachment record."}`);
-            } finally {
-                toggleLoading(false);
-            }
-        }
-
-        function showCustomConfirm(message) {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('confirm-modal');
-                const confirmText = document.getElementById('confirm-modal-text');
-                const cancelBtn = document.getElementById('confirm-modal-cancel');
-                const confirmBtn = document.getElementById('confirm-modal-confirm');
-                
-                confirmText.innerText = message;
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                
-                // Clear old listeners by cloning elements
-                const newCancelBtn = cancelBtn.cloneNode(true);
-                const newConfirmBtn = confirmBtn.cloneNode(true);
-                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-                
-                newCancelBtn.addEventListener('click', () => {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                    resolve(false);
-                });
-                
-                newConfirmBtn.addEventListener('click', () => {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                    resolve(true);
-                });
-            });
-        }
-
-        async function clearCloudDocumentField(plateNumber, targetField) {
-            const confirmed = await showCustomConfirm(`Are you sure you want to completely remove this document link for vehicle ${plateNumber}?`);
-            if (!confirmed) return;
-
-            toggleLoading(true);
-            try {
-                const patchPayload = {};
-                patchPayload[targetField] = null;
-
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/fleet?plate=eq.${encodeURIComponent(plateNumber)}`, {
-                    method: "PATCH",
-                    headers: getHeaders(),
-                    body: JSON.stringify(patchPayload)
-                });
-
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`Database delete error: ${errText}`);
-                }
-
-                const localVehicle = fleet.find(v => v.plate === plateNumber);
-                if (localVehicle) localVehicle[targetField] = null;
-
-                alert("Document attachment reference successfully removed.");
-                updateInterfaceMetricsAndAlerts();
-                buildRepositoryTableRows();
-                buildRegistryTableRows();
-            } catch (err) {
-                console.error("Bypassing pipeline intercept error:", err);
-                alert(`Error removing document reference:\n${err.message}`);
-            } finally {
-                toggleLoading(false);
-            }
-        }
-
-        function adjustFormFieldsByCategory() {
-            const category = document.getElementById('f-category').value;
-            const wrapperChassis = document.getElementById('wrapper-chassis');
-            const wrapperEngine = document.getElementById('wrapper-engine');
-            const wrapperLto = document.getElementById('wrapper-lto');
-            const wrapperGsis = document.getElementById('wrapper-gsis');
-
-            if (category === "Light Equipment") {
-                // Hides LTO, GSIS, Chassis, and Engine No.
-                wrapperChassis.classList.add('hidden');
-                wrapperEngine.classList.add('hidden');
-                wrapperLto.classList.add('hidden');
-                wrapperGsis.classList.add('hidden');
-            } else if (category === "Heavy Equipment") {
-                // Shows Chassis & Engine, Hides LTO & GSIS
-                wrapperChassis.classList.remove('hidden');
-                wrapperEngine.classList.remove('hidden');
-                wrapperLto.classList.add('hidden');
-                wrapperGsis.classList.add('hidden');
-            } else { // Service Vehicle: Shows everything
-                wrapperChassis.classList.remove('hidden');
-                wrapperEngine.classList.remove('hidden');
-                wrapperLto.classList.remove('hidden');
-                wrapperGsis.classList.remove('hidden');
-            }
-        }
-
-        function setQuickPmsPreset(months) {
-            const today = new Date();
-            // Add months cleanly
-            today.setMonth(today.getMonth() + months);
-            
-            // Format YYYY-MM-DD
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            
-            document.getElementById('f-pms').value = `${yyyy}-${mm}-${dd}`;
-        }
-
-        function openFormModal(index = -1) {
-            const modal = document.getElementById('form-modal');
-            const form = document.getElementById('vehicle-form');
-            form.reset();
-
-            // Set default logger date to today
-            document.getElementById('new-log-date').value = "2026-06-15";
-            document.getElementById('new-log-activity').value = '';
-
-            if (index > -1) {
-                const v = fleet[index];
-                document.getElementById('modal-title').innerText = "Modify Existing Fleet Record";
-                document.getElementById('edit-idx').value = index;
-                document.getElementById('f-plate').value = v.plate;
-                document.getElementById('f-plate').disabled = true;
-                document.getElementById('f-year').value = v.year;
-                document.getElementById('f-model').value = v.model;
-                document.getElementById('f-chassis').value = v.chassis_no || '';
-                document.getElementById('f-engine').value = v.engine_no || '';
-                document.getElementById('f-driver').value = v.driver || '';
-                document.getElementById('f-lto').value = v.lto || '';
-                document.getElementById('f-gsis').value = v.gsis || '';
-                document.getElementById('f-pms').value = v.next_pms || '';
-                document.getElementById('f-history').value = v.repair_history || '';
-                document.getElementById('f-status').value = v.vehicle_status || 'Operational';
-                document.getElementById('f-category').value = v.equipment_category || 'Service Vehicle';
-                
-                renderHistoryTimeline(v.repair_history || '');
-            } else {
-                document.getElementById('modal-title').innerText = "Log New Fleet Vehicle / Equipment";
-                document.getElementById('edit-idx').value = -1;
-                document.getElementById('f-plate').disabled = false;
-                document.getElementById('f-status').value = 'Operational';
-                document.getElementById('f-category').value = 'Service Vehicle';
-                renderHistoryTimeline('');
-            }
-
-            adjustFormFieldsByCategory(); // Set fields visibility depending on loaded category
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function renderHistoryTimeline(historyString) {
-            const timelineContainer = document.getElementById('history-display-timeline');
-            timelineContainer.innerHTML = "";
-
-            if (!historyString || historyString.trim() === "") {
-                timelineContainer.innerHTML = `<span class="italic text-slate-500 block py-2">No repair history logged for this vehicle.</span>`;
-                return;
-            }
-
-            const logs = historyString.split('\n').filter(line => line.trim() !== "");
-            
-            logs.forEach((log, index) => {
-                const parts = log.split(':');
-                const dateLabel = parts[0] ? parts[0].trim() : '—';
-                const activityLabel = parts.slice(1).join(':') ? parts.slice(1).join(':').trim() : '—';
-
-                const logItem = document.createElement('div');
-                logItem.className = "flex gap-3 items-start border-l border-brand-border pl-4 relative ml-2 group";
-                logItem.innerHTML = `
-                    <div class="absolute w-2 h-2 rounded-full bg-emerald-500 -left-[4.5px] top-1.5"></div>
-                    <div class="flex-grow">
-                        <span class="font-mono text-[10px] font-bold text-slate-400 block">${dateLabel}</span>
-                        <span class="text-slate-200 mt-0.5 block">${activityLabel}</span>
-                    </div>
-                    <button type="button" onclick="removeMaintenanceLogEntry(${index})" class="text-rose-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 font-semibold text-[10px] bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded transition-all shrink-0 self-center">
-                        🗑️ Delete
-                    </button>
-                `;
-                timelineContainer.appendChild(logItem);
-            });
-        }
-
-        function addMaintenanceLogEntry() {
-            const dateVal = document.getElementById('new-log-date').value;
-            const activityVal = document.getElementById('new-log-activity').value.trim();
-
-            if (!activityVal) {
-                alert("Please enter maintenance service details before logging.");
-                return;
-            }
-
-            const rawTextarea = document.getElementById('f-history');
-            const newEntry = `${dateVal}: ${activityVal}`;
-
-            if (rawTextarea.value.trim() === "") {
-                rawTextarea.value = newEntry;
-            } else {
-                rawTextarea.value = newEntry + "\n" + rawTextarea.value;
-            }
-
-            // Instantly redraw the mechanic timeline inside the modal
-            renderHistoryTimeline(rawTextarea.value);
-            document.getElementById('new-log-activity').value = ""; // Clear activity input field
-        }
-
-        function removeMaintenanceLogEntry(index) {
-            if (!confirm("Are you sure you want to delete this maintenance entry?")) return;
-            const rawTextarea = document.getElementById('f-history');
-            let logs = rawTextarea.value.split('\n').filter(line => line.trim() !== "");
-            logs.splice(index, 1);
-            rawTextarea.value = logs.join('\n');
-            renderHistoryTimeline(rawTextarea.value);
-        }
-
-        function closeFormModal() {
-            const modal = document.getElementById('form-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        async function handleFormSubmission(e) {
-            e.preventDefault();
-            const idx = parseInt(document.getElementById('edit-idx').value);
-            const category = document.getElementById('f-category').value;
-            
-            const recordData = {
-                plate: document.getElementById('f-plate').value.trim().toUpperCase(),
-                year: document.getElementById('f-year').value.toString(),
-                model: document.getElementById('f-model').value.trim(),
-                driver: document.getElementById('f-driver').value.trim() || null,
-                next_pms: document.getElementById('f-pms').value || null,
-                repair_history: document.getElementById('f-history').value.trim() || null,
-                vehicle_status: document.getElementById('f-status').value,
-                equipment_category: category
-            };
-
-            // Database Cleaning: Map values dynamically depending on classification to keep database clean
-            if (category === "Light Equipment") {
-                recordData.chassis_no = null;
-                recordData.engine_no = null;
-                recordData.lto = null;
-                recordData.gsis = null;
-            } else if (category === "Heavy Equipment") {
-                recordData.chassis_no = document.getElementById('f-chassis').value.trim().toUpperCase() || null;
-                recordData.engine_no = document.getElementById('f-engine').value.trim().toUpperCase() || null;
-                recordData.lto = null;
-                recordData.gsis = null;
-            } else { // Service Vehicle
-                recordData.chassis_no = document.getElementById('f-chassis').value.trim().toUpperCase() || null;
-                recordData.engine_no = document.getElementById('f-engine').value.trim().toUpperCase() || null;
-                recordData.lto = document.getElementById('f-lto').value || null;
-                recordData.gsis = document.getElementById('f-gsis').value || null;
-            }
-
-            toggleLoading(true);
-            try {
-                let response;
-                if (idx > -1) {
-                    response = await fetch(`${SUPABASE_URL}/rest/v1/fleet?plate=eq.${encodeURIComponent(recordData.plate)}`, {
-                        method: "PATCH",
-                        headers: getHeaders(),
-                        body: JSON.stringify(recordData)
-                    });
-                } else {
-                    recordData.lto_document_attachment = null;
-                    recordData.cr_document_attachment = null;
-                    recordData.gsis_document_attachment = null;
-                    response = await fetch(`${SUPABASE_URL}/rest/v1/fleet`, {
-                        method: "POST",
-                        headers: getHeaders(),
-                        body: JSON.stringify(recordData)
-                    });
-                }
-
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(errText);
-                }
-                
-                closeFormModal();
-                fetchFleetFromCloud();
-            } catch (err) {
-                console.error("Mutation failed:", err);
-                alert(`Error saving vehicle details:\n${err.message || "Please check your Supabase DB connection and column types."}`);
-            } finally {
-                toggleLoading(false);
-            }
-        }
-
-        async function deleteVehicleRecord(plateId) {
-            const confirmed = await showCustomConfirm(`Are you certain you want to permanently erase record metadata for vehicle ${plateId}?`);
-            if (!confirmed) return;
-
-            toggleLoading(true);
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/fleet?plate=eq.${encodeURIComponent(plateId)}`, {
-                    method: "DELETE",
-                    headers: getHeaders()
-                });
-                if (!response.ok) throw new Error("Cloud execution failed.");
-                fetchFleetFromCloud();
-            } catch (err) {
-                console.error(err);
-                alert("Database action updated successfully.");
-                fetchFleetFromCloud();
-            } finally {
-                toggleLoading(false);
-            }
-        }
-
-        function exportLocalDatabaseToBackupFile() {
-            if (fleet.length === 0) return alert("No operational data array rows available for packaging snapshots.");
-            const flatStringData = JSON.stringify(fleet, null, 2);
-            const dataBlob = new Blob([flatStringData], { type: "application/json" });
-            const anchor = document.createElement('a');
-            anchor.href = URL.createObjectURL(dataBlob);
-            anchor.download = `CEO_FLEET_SNAPSHOT_${new Date().toISOString().split('T')[0]}.json`;
-            anchor.click();
+        function exportSystemData() {
+            const blob = new Blob([JSON.stringify(fleetData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'fleet_data_backup.json';
+            a.click();
         }
     </script>
 </body>
