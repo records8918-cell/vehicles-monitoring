@@ -6,11 +6,6 @@
     <title>Fleet Monitor PH — Baguio City Engineering</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & Recharts CDN for Spending Trend Visualizations -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
-
     <script>
         tailwind.config = {
             theme: {
@@ -28,31 +23,17 @@
         }
     </script>
     <style>
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #243249;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #10b981;
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #243249; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #10b981; }
 
-        @page {
-            size: portrait;
-            margin: 0 !important;
-        }
+        @page { size: portrait; margin: 0 !important; }
 
         @media print {
             #sidebar, #sidebar-backdrop, .no-print, .h-16, #form-modal, #confirm-modal {
                 display: none !important;
             }
-
             html, body {
                 background: #ffffff !important;
                 color: #000000 !important;
@@ -61,7 +42,6 @@
                 width: 100% !important;
                 display: block !important;
             }
-
             .flex-grow, .flex-1, #view-dashboard, #view-reports, #view-repository, #view-utilities, #print-only-profile, #report-table-wrapper {
                 overflow: visible !important;
                 max-height: none !important;
@@ -73,12 +53,7 @@
                 box-shadow: none !important;
                 display: block !important;
             }
-
-            div {
-                overflow: visible !important;
-                height: auto !important;
-            }
-
+            div { overflow: visible !important; height: auto !important; }
             #print-only-profile, .print-exec-layout .print-card {
                 padding: 12mm 15mm 12mm 15mm !important;
                 box-sizing: border-box !important;
@@ -90,32 +65,6 @@
                 box-shadow: none !important;
                 display: block !important;
             }
-
-            .print-table {
-                table-layout: auto !important;
-                width: 100% !important;
-                border-collapse: collapse !important;
-                margin-top: 15px !important;
-            }
-            .print-table th, .print-table td {
-                font-size: 8.5pt !important;
-                padding: 6px 4px !important;
-                word-break: break-all !important;
-                white-space: normal !important;
-                color: #000000 !important;
-                border-bottom: 1px solid #cbd5e1 !important;
-            }
-            .print-table .font-mono {
-                font-size: 8pt !important;
-                white-space: nowrap !important;
-            }
-
-            #print-only-profile h2 { font-size: 16pt !important; font-weight: 700 !important; }
-            #print-only-profile h3 { font-size: 12pt !important; font-weight: 700 !important; }
-            #print-only-profile .font-mono { font-size: 9.5pt !important; white-space: nowrap !important; }
-            #print-only-profile strong { font-size: 11pt !important; }
-            #print-only-profile span { font-size: 9pt !important; }
-
             body.printing-single-profile #print-only-profile { display: block !important; }
             body.printing-single-profile #view-dashboard,
             body.printing-single-profile #view-reports,
@@ -132,9 +81,6 @@
 </head>
 <body class="h-screen w-screen text-slate-100 flex bg-brand-dark overflow-hidden font-sans">
 
-    <!-- Global File Input for Repository Uploads -->
-    <input type="file" id="global-hidden-uploader" class="hidden" accept="application/pdf,image/*" onchange="processSelectedFile(this)">
-
     <!-- Loading Spinner Overlay -->
     <div id="loading-spinner" class="fixed inset-0 bg-brand-dark/80 backdrop-blur-sm z-[9999] flex items-center justify-center hidden">
         <div class="flex flex-col items-center gap-4">
@@ -146,7 +92,22 @@
         </div>
     </div>
 
-    <!-- Security Gatekeeper Overlay -->
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-border w-full max-w-sm rounded-xl p-6 shadow-2xl space-y-6">
+            <div class="flex items-center gap-3 text-rose-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <h3 class="text-lg font-bold text-white">Confirm Removal</h3>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed" id="confirm-modal-text">Are you sure you want to perform this action?</p>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" id="confirm-modal-cancel" class="border border-brand-border hover:bg-slate-800 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold transition-all">Cancel</button>
+                <button type="button" id="confirm-modal-confirm" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-all">Yes, Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gatekeeper Overlay -->
     <div class="fixed inset-0 bg-brand-dark z-[8888] flex items-center justify-center p-4" id="gatekeeper-lock">
         <div class="bg-brand-card border border-brand-border w-full max-w-md rounded-xl p-8 shadow-2xl text-center">
             <div class="mx-auto w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mb-6">
@@ -166,7 +127,7 @@
         </div>
     </div>
 
-    <!-- Mobile Navigation Backdrop Drawer Overlay -->
+    <!-- Mobile Sidebar Backdrop -->
     <div id="sidebar-backdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden md:hidden"></div>
 
     <!-- Sidebar Navigation -->
@@ -207,9 +168,9 @@
         </div>
     </div>
 
-    <!-- Workspace Area -->
+    <!-- Workspace Container -->
     <div class="flex-grow flex-1 min-w-0 flex flex-col overflow-hidden bg-brand-dark h-full">
-        <!-- Top Bar Header -->
+        <!-- Header Bar -->
         <div class="h-16 border-b border-brand-border px-4 sm:px-8 flex items-center justify-between bg-brand-card shrink-0 no-print">
             <div class="flex items-center gap-3">
                 <button onclick="toggleMobileSidebar(true)" class="md:hidden text-slate-300 hover:text-white p-2 -ml-2">
@@ -224,7 +185,7 @@
             </button>
         </div>
 
-        <!-- Dashboard View Container -->
+        <!-- Dashboard View -->
         <div class="flex-grow p-4 sm:p-8 overflow-y-auto no-print space-y-6 sm:space-y-8" id="view-dashboard">
             <!-- Metrics Segment -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -261,36 +222,26 @@
                 <div id="alerts-list-hook" class="space-y-3 max-h-56 overflow-y-auto pr-2 scrollbar-thin"></div>
             </div>
 
-            <!-- Filter & Search Toolbar -->
+            <!-- Main Search & Filter Toolbar -->
             <div class="bg-brand-card border border-brand-border rounded-xl p-4 sm:p-6 flex flex-col xl:flex-row gap-6 justify-between xl:items-center">
                 <div class="w-full xl:max-w-xs relative">
-                    <input type="text" class="w-full bg-brand-dark border border-brand-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" id="table-search" placeholder="Search plate, model, driver...">
+                    <input type="text" class="w-full bg-brand-dark border border-brand-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all" id="table-search" placeholder="Search plate, model, driver...">
                     <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                <div class="flex flex-wrap gap-6 w-full xl:w-auto">
-                    <div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Equipment Type</span>
-                        <div class="flex sm:inline-flex rounded-lg bg-slate-950 p-1 border border-brand-border overflow-x-auto" id="filter-category-group">
-                            <button class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md bg-brand-border text-white transition-all whitespace-nowrap" data-filter="all">All Types</button>
-                            <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Service Vehicle">Vehicles</button>
-                            <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Heavy Equipment">Heavy</button>
-                            <button class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all whitespace-nowrap" data-filter="Light Equipment">Light/Tools</button>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <!-- Database Data Table Wrapper -->
+            <!-- Registry Desktop Table -->
             <div class="hidden md:block bg-brand-card border border-brand-border rounded-xl overflow-x-auto shadow-lg">
                 <table class="w-full text-left text-sm text-slate-300">
                     <thead class="bg-slate-900/60 text-[11px] uppercase tracking-wider text-slate-400 font-bold border-b border-brand-border">
                         <tr>
-                            <th class="py-4 px-6">Plate / Control / Serial No.</th>
+                            <th class="py-4 px-6">Plate / Control</th>
                             <th class="py-4 px-6">Description & Age</th>
-                            <th class="py-4 px-6">Assigned Driver / Custodian</th>
+                            <th class="py-4 px-6">Assigned Driver</th>
                             <th class="py-4 px-6">LTO Status</th>
                             <th class="py-4 px-6">GSIS Status</th>
                             <th class="py-4 px-6">Next PMS</th>
+                            <th class="py-4 px-6">Last Service</th>
                             <th class="py-4 px-6 text-center">Actions</th>
                         </tr>
                     </thead>
@@ -301,7 +252,7 @@
             <div id="registry-mobile-list" class="block md:hidden space-y-4"></div>
         </div>
 
-        <!-- Executive Compliance Report View -->
+        <!-- Reports View -->
         <div class="flex-grow flex-1 min-w-0 flex flex-col overflow-hidden p-4 sm:p-8 hidden" id="view-reports">
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print bg-brand-card border border-brand-border p-4 rounded-xl shrink-0">
                 <button class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm shadow-md transition-all shrink-0" onclick="triggerExecutiveReportPrint()">
@@ -315,6 +266,21 @@
                         <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-widest mt-1">City Engineering Office — Equipment & Fleet Management</p>
                         <p class="text-sm sm:text-lg font-extrabold text-emerald-800 tracking-wide mt-4 sm:mt-6 uppercase">Executive Fleet Compliance & Maintenance Report</p>
                     </div>
+                    <div class="text-right text-xs font-semibold text-slate-500 mb-6 italic" id="print-timestamp">Generated on: --</div>
+                    <div class="grid grid-cols-3 gap-4 sm:gap-6 mb-8 no-print text-xs">
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 sm:p-4 text-center">
+                            <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Active Units</span>
+                            <span class="text-lg sm:text-2xl font-extrabold text-slate-800 mt-1 block" id="rep-total">0</span>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-100 rounded-lg p-3 sm:p-4 text-center">
+                            <span class="text-[9px] sm:text-[10px] font-bold text-rose-500 uppercase tracking-wider block">Expired / Overdue</span>
+                            <span class="text-lg sm:text-2xl font-extrabold text-rose-700 mt-1 block" id="rep-expired">0</span>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 sm:p-4 text-center">
+                            <span class="text-[9px] sm:text-[10px] font-bold text-amber-500 uppercase tracking-wider block">Pending / Due PMS</span>
+                            <span class="text-lg sm:text-2xl font-extrabold text-amber-700 mt-1 block" id="rep-warning">0</span>
+                        </div>
+                    </div>
                     <div class="overflow-auto max-h-[50vh] sm:max-h-[55vh] border border-slate-200 rounded-lg" id="report-table-wrapper">
                         <table class="w-full text-left text-xs text-slate-800 print-table border-collapse">
                             <thead class="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-200 sticky top-0 z-10">
@@ -322,6 +288,8 @@
                                     <th class="py-3 px-4 bg-slate-50 text-slate-800">Plate No. & Status</th>
                                     <th class="py-3 px-4 bg-slate-50 text-slate-800">Identification Details</th>
                                     <th class="py-3 px-4 bg-slate-50 text-slate-800">Driver</th>
+                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">LTO Status</th>
+                                    <th class="py-3 px-4 bg-slate-50 text-slate-800">GSIS Status</th>
                                     <th class="py-3 px-4 bg-slate-50 text-slate-800">Next PMS</th>
                                 </tr>
                             </thead>
@@ -332,15 +300,11 @@
             </div>
         </div>
 
-        <!-- Cloud Documentation Vault Container -->
         <div class="flex-grow p-4 sm:p-8 overflow-y-auto hidden space-y-6" id="view-repository">
-            <div class="bg-brand-card border border-brand-border rounded-xl p-4 sm:p-6">
-                <h3 class="text-lg font-bold text-white mb-2">Cloud Documentation Vault</h3>
-                <p class="text-sm text-slate-400">View and attach supporting documents.</p>
-            </div>
+            <h3 class="text-lg font-bold text-white">Central Document Repository</h3>
+            <div id="repo-table-body"></div>
         </div>
 
-        <!-- System Utilities View Container -->
         <div class="flex-grow p-4 sm:p-8 overflow-y-auto hidden" id="view-utilities">
             <div class="bg-brand-card border border-brand-border p-6 rounded-xl max-w-2xl shadow-lg space-y-4">
                 <h3 class="text-lg font-bold text-white">Local JSON Registry Backup Utility</h3>
@@ -363,40 +327,19 @@
                 <textarea id="f-history" class="hidden"></textarea>
 
                 <div class="p-4 sm:p-6 space-y-6 overflow-y-auto flex-grow max-h-[75vh]">
-                    
-                    <!-- PROACTIVE PREVENTIVE MAINTENANCE ADVISORY ENGINE BANNER -->
-                    <div id="pm-advisory-banner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-amber-300">
-                        <div class="flex items-center justify-between gap-4">
-                            <div class="flex items-center gap-3">
-                                <span class="text-xl">⚠️</span>
-                                <div>
-                                    <h4 class="font-bold text-sm text-white uppercase tracking-wider">Proactive Maintenance Advisory</h4>
-                                    <p class="text-xs text-amber-300/80 mt-0.5" id="pm-advisory-msg">Vehicle threshold requires service attention within 500 km / 30 days.</p>
-                                </div>
-                            </div>
-                            <button type="button" id="btn-trigger-pm-now" onclick="triggerPmNowAction()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4 py-2 rounded-lg shadow-lg transition-all shrink-0">
-                                Trigger PM Now
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- CORE VEHICLE FIELDS -->
+                    <!-- Vehicle Core Input Grid -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plate / Control / Serial No.</label>
-                            <input type="text" id="f-plate" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 transition-all" required>
+                            <input type="text" id="f-plate" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="e.g. SAB-2391" required>
                         </div>
                         <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Acquisition Year</label>
-                            <input type="number" id="f-year" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="2022">
+                            <input type="number" id="f-year" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="2021">
                         </div>
                         <div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Make / Model Description</label>
-                            <input type="text" id="f-model" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" required>
-                        </div>
-                        <div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assigned Custodian / Driver</label>
-                            <input type="text" id="f-driver" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Equipment Make / Model</label>
+                            <input type="text" id="f-model" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="e.g. Isuzu D-Max" required>
                         </div>
                         <div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Operational Status</label>
@@ -408,603 +351,486 @@
                             </select>
                         </div>
                         <div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Equipment Classification</label>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Equipment Category</label>
                             <select id="f-category" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
                                 <option value="Service Vehicle">🚗 Service Vehicle</option>
                                 <option value="Heavy Equipment">🚜 Heavy Equipment</option>
-                                <option value="Light Equipment">⚙️ Light Equipment / Power Tool</option>
+                                <option value="Light Equipment">⚙️ Light Equipment</option>
                             </select>
                         </div>
+                        <div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assigned Driver / Custodian</label>
+                            <input type="text" id="f-driver" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="Full name">
+                        </div>
                         <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1" id="wrapper-lto">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">LTO Registration Deadline</label>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">LTO Expiration</label>
                             <input type="date" id="f-lto" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
                         </div>
                         <div class="flex flex-col gap-1.5 col-span-2 sm:col-span-1" id="wrapper-gsis">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">GSIS Insurance Renewal</label>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">GSIS Expiration</label>
                             <input type="date" id="f-gsis" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
                         </div>
                         <div class="col-span-2 flex flex-col gap-1.5 border-t border-brand-border pt-4">
                             <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Next Maintenance Service Due Date (PMS)</label>
-                            <input type="date" id="f-pms" onchange="checkPmsAdvisoryState()" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all">
+                            <input type="date" id="f-pms" class="bg-brand-dark border border-brand-border rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all mt-1">
                         </div>
                     </div>
 
-                    <!-- SPENDINGS TREND VISUALIZATIONS (RECHARTS MOUNT) -->
-                    <div class="bg-brand-dark/60 border border-brand-border rounded-xl p-4 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">📊 12-Month Repair Spending Trend</span>
-                            <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">Recharts Engine</span>
-                        </div>
-                        <div id="recharts-spending-container" class="w-full h-48"></div>
-                    </div>
-
-                    <!-- ENHANCED REPAIR HISTORY MODULE -->
-                    <div class="bg-brand-dark/40 border border-brand-border rounded-xl p-4 space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brand-border/60 pb-3">
-                            <div>
-                                <span class="text-xs font-bold text-white uppercase tracking-wider">🔧 Maintenance & Repair History Log</span>
-                                <p class="text-[10px] text-slate-400">Track costs, job orders, workshops, and notes.</p>
+                    <!-- FEATURE MODULE 2: PROACTIVE PREVENTIVE MAINTENANCE ADVISORY ENGINE -->
+                    <div id="pms-advisory-banner" class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hidden">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                                🔔
                             </div>
-                            <!-- Chronological Sort Toggle -->
-                            <div class="flex items-center gap-2 shrink-0">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase">Sort:</span>
-                                <button type="button" id="sort-toggle-btn" onclick="toggleRepairSortOrder()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-brand-border text-xs px-3 py-1 rounded-lg font-semibold transition-all">
+                            <div>
+                                <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                                    PMS Advisory Threshold Notice
+                                    <span id="pms-advisory-badge" class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase"></span>
+                                </h4>
+                                <p class="text-xs text-slate-300 mt-0.5" id="pms-advisory-text">Vehicle reaches preventive maintenance service within target window.</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="triggerPmsNow()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs shadow-md transition-all shrink-0 flex items-center gap-1.5">
+                            ⚡ Trigger PM Now
+                        </button>
+                    </div>
+
+                    <!-- FEATURE MODULE 3: SPENDINGS TREND VISUALIZATIONS -->
+                    <div class="bg-brand-dark/50 border border-brand-border rounded-xl p-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">📊 12-Month Repair Spending Trend</span>
+                            <span class="text-xs font-mono font-bold text-emerald-400" id="chart-year-total">₱0.00 Total</span>
+                        </div>
+                        <div id="spending-bar-chart-container" class="h-36 w-full flex items-end gap-2 pt-4 px-2 border-b border-brand-border pb-2">
+                            <!-- SVG / HTML Bars injected programmatically -->
+                        </div>
+                        <div id="spending-bar-chart-labels" class="flex justify-between text-[9px] text-slate-500 font-mono px-1">
+                            <!-- Month Labels -->
+                        </div>
+                    </div>
+
+                    <!-- FEATURE MODULE 1: ENHANCED REPAIR HISTORY MODULE (SORT, SEARCH & METRICS) -->
+                    <div class="bg-brand-dark/40 border border-brand-border rounded-xl p-4 space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-border/60 pb-3">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">🔧 Extended Maintenance & Repair History Log</span>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <input type="text" id="repair-search-input" oninput="renderEnhancedRepairHistory()" class="bg-brand-dark border border-brand-border rounded-lg px-3 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 flex-grow sm:flex-none w-full sm:w-48" placeholder="Search PO, parts, shop...">
+                                <button type="button" onclick="toggleRepairSortOrder()" id="repair-sort-btn" class="bg-slate-800 hover:bg-slate-700 border border-brand-border text-slate-300 px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 transition-all">
                                     ⬇️ Newest First
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Repair Summary Metrics Header Cards -->
-                        <div class="grid grid-cols-3 gap-3 text-center">
-                            <div class="bg-slate-900/80 border border-brand-border/60 p-2.5 rounded-lg">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Total Repair Cost</span>
-                                <span id="metric-total-cost" class="text-sm font-extrabold text-emerald-400 font-mono">₱0.00</span>
+                        <!-- Repair Summary Statistics Trackers -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-brand-card/60 border border-brand-border p-2.5 rounded-lg text-center">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Total Repairs Spend</span>
+                                <span class="text-sm font-extrabold text-emerald-400 font-mono mt-0.5 block" id="repair-stat-cost">₱0.00</span>
                             </div>
-                            <div class="bg-slate-900/80 border border-brand-border/60 p-2.5 rounded-lg">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Total Incidents</span>
-                                <span id="metric-total-incidents" class="text-sm font-extrabold text-blue-400 font-mono">0</span>
+                            <div class="bg-brand-card/60 border border-brand-border p-2.5 rounded-lg text-center">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Service Incidents</span>
+                                <span class="text-sm font-extrabold text-white mt-0.5 block" id="repair-stat-incidents">0</span>
                             </div>
-                            <div class="bg-slate-900/80 border border-brand-border/60 p-2.5 rounded-lg">
+                            <div class="bg-brand-card/60 border border-brand-border p-2.5 rounded-lg text-center">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase block">Unique Workshops</span>
-                                <span id="metric-unique-shops" class="text-sm font-extrabold text-amber-400 font-mono">0</span>
+                                <span class="text-sm font-extrabold text-blue-400 mt-0.5 block" id="repair-stat-workshops">0</span>
                             </div>
                         </div>
 
-                        <!-- Fuzzy Search Input -->
-                        <div class="relative">
-                            <input type="text" id="history-search-input" oninput="renderHistoryTimeline()" class="w-full bg-brand-dark border border-brand-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Search description, PO/JO #, shop, replaced parts, or notes...">
-                            <svg class="w-4 h-4 text-slate-500 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <!-- New Log Input Row -->
+                        <div class="grid grid-cols-12 gap-2 bg-brand-dark/60 p-3 rounded-lg border border-brand-border/40 text-xs">
+                            <input type="date" id="new-log-date" class="col-span-12 sm:col-span-3 bg-brand-dark border border-brand-border rounded px-2.5 py-1 text-white">
+                            <input type="text" id="new-log-po" class="col-span-6 sm:col-span-2 bg-brand-dark border border-brand-border rounded px-2.5 py-1 text-white" placeholder="PO / JO #">
+                            <input type="text" id="new-log-workshop" class="col-span-6 sm:col-span-3 bg-brand-dark border border-brand-border rounded px-2.5 py-1 text-white" placeholder="Servicing Shop">
+                            <input type="number" id="new-log-cost" class="col-span-6 sm:col-span-2 bg-brand-dark border border-brand-border rounded px-2.5 py-1 text-white" placeholder="Cost (₱)">
+                            <button type="button" onclick="addEnhancedMaintenanceLogEntry()" class="col-span-6 sm:col-span-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded py-1 transition-all">➕ Add Entry</button>
+                            <input type="text" id="new-log-activity" class="col-span-12 bg-brand-dark border border-brand-border rounded px-2.5 py-1 text-white mt-1" placeholder="Service Details, Replacement Components & Inspector Notes...">
                         </div>
 
-                        <!-- Structured Entry Form -->
-                        <div class="bg-slate-900/90 border border-brand-border/80 rounded-lg p-3 space-y-3">
-                            <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Add Structured Service Record</span>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                <div>
-                                    <label class="text-[9px] font-bold text-slate-400 block mb-1">Date</label>
-                                    <input type="date" id="log-add-date" class="w-full bg-brand-dark border border-brand-border rounded px-2 py-1 text-xs text-white">
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-slate-400 block mb-1">PO / JO #</label>
-                                    <input type="text" id="log-add-jo" class="w-full bg-brand-dark border border-brand-border rounded px-2 py-1 text-xs text-white" placeholder="JO-2026-88">
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-slate-400 block mb-1">Cost (PHP ₱)</label>
-                                    <input type="number" id="log-add-cost" class="w-full bg-brand-dark border border-brand-border rounded px-2 py-1 text-xs text-white" placeholder="12500">
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-slate-400 block mb-1">Servicing Shop</label>
-                                    <input type="text" id="log-add-shop" class="w-full bg-brand-dark border border-brand-border rounded px-2 py-1 text-xs text-white" placeholder="City Motorpool">
-                                </div>
-                                <div class="col-span-2">
-                                    <label class="text-[9px] font-bold text-slate-400 block mb-1">Service Description</label>
-                                    <input type="text" id="log-add-desc" class="w-full bg-brand-dark border border-brand-border rounded px-2 py-1 text-xs text-white" placeholder="Changed Oil, Replace Brake Pads">
-                                </div>
-                                <div class="col-span-2">
-                                    <label class="text-[9px] font-bold text-slate-400 block mb-1">Replaced Parts / Components</label>
-                                    <input type="text" id="log-add-parts" class="w-full bg-brand-dark border border-brand-border rounded px-2 py-1 text-xs text-white" placeholder="Brake Pad set, Synthetic Oil 5L">
-                                </div>
-                                <div class="col-span-2 sm:col-span-3">
-                                    <label class="text-[9px] font-bold text-slate-400 block mb-1">Inspector General Notes</label>
-                                    <input type="text" id="log-add-notes" class="w-full bg-brand-dark border border-brand-border rounded px-2 py-1 text-xs text-white" placeholder="Passed safety standards inspection">
-                                </div>
-                                <div class="col-span-2 sm:col-span-1 flex items-end">
-                                    <button type="button" onclick="addStructuredLogEntry()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs py-1.5 rounded transition-all">
-                                        ➕ Commit Log
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Rendered Interactive Timeline -->
-                        <div id="history-display-timeline" class="space-y-3 max-h-56 overflow-y-auto pr-1 text-xs"></div>
+                        <!-- Log Timeline Output -->
+                        <div id="history-display-timeline" class="space-y-3 max-h-52 overflow-y-auto pr-2 text-xs divide-y divide-brand-border/40"></div>
                     </div>
                 </div>
-                
+
                 <div class="p-6 border-t border-brand-border flex justify-end gap-3 bg-slate-900/40">
                     <button type="button" class="border border-brand-border hover:bg-slate-800 text-slate-300 px-4 py-2 rounded-lg text-sm font-semibold transition-all" id="btn-close-modal-footer">Cancel</button>
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all">💾 Save Record</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all">💾 Save Vehicle Record</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Print Single Profile Target -->
-    <div id="print-only-profile" class="hidden print-only p-12 bg-white text-slate-900 border border-slate-200 rounded-xl max-w-4xl mx-auto font-sans font-medium">
-        <div class="text-center border-b-2 border-slate-300 pb-6 mb-8">
-            <h2 class="text-2xl font-bold tracking-tight uppercase text-slate-900">City Government of Baguio</h2>
-            <p class="text-sm font-semibold text-slate-500 uppercase tracking-widest mt-1">City Engineering Office — Equipment & Fleet Management</p>
-            <p class="text-lg font-extrabold text-slate-800 tracking-wide mt-4 uppercase">Equipment Profile & Service Log Sheet</p>
+    <!-- Print Profile Frame -->
+    <div id="print-only-profile" class="hidden font-sans">
+        <div class="text-center border-b-2 border-slate-900 pb-4 mb-6">
+            <h2 class="text-2xl font-bold uppercase text-slate-900">City Government of Baguio</h2>
+            <p class="text-xs font-bold uppercase text-slate-600 mt-1">City Engineering Office — Equipment Management Division</p>
+            <p class="text-sm font-extrabold uppercase text-emerald-800 mt-3">Individual Vehicle Record Card</p>
         </div>
-        <div class="grid grid-cols-2 gap-y-4 gap-x-8 text-sm mb-8">
-            <div><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Plate / Serial No:</span> <strong class="text-base font-mono text-slate-900" id="print-prof-plate">SAB-2391</strong></div>
-            <div><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Classification & Age:</span> <strong class="text-base text-slate-900" id="print-prof-year">2019</strong></div>
-            <div class="col-span-2"><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Equipment Model:</span> <strong class="text-base text-slate-900" id="print-prof-model">Toyota Hilux D-4D</strong></div>
-            <div class="col-span-2"><span class="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Assigned Driver:</span> <strong class="text-base text-slate-900" id="print-prof-driver">Engr. J. Ramos</strong></div>
-        </div>
-        <div class="border-t border-slate-200 pt-6">
-            <h3 class="text-sm font-extrabold uppercase text-slate-700 tracking-wider mb-4">Complete Maintenance & Repair History Log</h3>
-            <div id="print-prof-timeline" class="space-y-4"></div>
-        </div>
+        <div id="print-profile-content"></div>
     </div>
 
     <script>
-        const SUPABASE_URL = "https://mkvmqjrbskivbbaizovt.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_hF2Z7ZRKTiLbLoNXofQIkQ_aNaCFPQ7";
+        const STORAGE_KEY = 'fleet_monitor_ph_db_2026';
+        let fleetData = [];
+        let repairSortAscending = false; // Newest First by default
 
-        let fleet = [];
-        let sortNewestFirst = true;
-        let categoryFilter = 'all';
-
-        const getHeaders = () => ({
-            "apikey": SUPABASE_KEY,
-            "Authorization": `Bearer ${SUPABASE_KEY}`,
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
-        });
-
-        const toggleLoading = (show) => {
-            document.getElementById('loading-spinner').classList.toggle('hidden', !show);
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
-            setupEventListeners();
-            if (sessionStorage.getItem('fleet_authenticated') === 'true') {
-                document.getElementById('gatekeeper-lock').classList.add('hidden');
-                fetchFleetFromCloud();
+        const SAMPLE_DATA = [
+            {
+                id: 'unit-101',
+                category: 'Service Vehicle',
+                plate: 'SAB-1029',
+                make: 'Isuzu',
+                model: 'D-Max Pickup',
+                year: 2021,
+                driver: 'Juan Dela Cruz',
+                ltoExpire: '2026-11-15',
+                gsisExpire: '2026-10-25',
+                pmsExpire: '2026-10-12',
+                lastRepair: 'Oil change, brake pad replacement',
+                repairLogs: [
+                    { date: '2026-09-15', po: 'JO-2026-88', workshop: 'City Motorpool Main', cost: 4500, details: 'Replaced brake pads and conducted 10k engine tune-up.' },
+                    { date: '2026-04-10', po: 'PO-9912', workshop: 'Baguio Auto Precision', cost: 12800, details: 'Replaced suspension shocks and recalibrated wheel alignment.' }
+                ]
             }
-        });
+        ];
 
-        function verifySecurityAccess(e) {
-            e.preventDefault();
-            const passwordInput = document.getElementById('gatekeeper-pass').value;
-            if (passwordInput === "motorpool2010") {
-                sessionStorage.setItem('fleet_authenticated', 'true');
-                document.getElementById('gatekeeper-lock').classList.add('hidden');
-                fetchFleetFromCloud();
+        function initApp() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                try { fleetData = JSON.parse(raw); } catch (e) { fleetData = SAMPLE_DATA; }
             } else {
-                document.getElementById('gatekeeper-error').classList.remove('hidden');
+                fleetData = SAMPLE_DATA;
+                saveData();
             }
+            setupEventListeners();
+            renderDashboard();
         }
 
-        async function fetchFleetFromCloud() {
-            toggleLoading(true);
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/fleet?select=*&order=plate.asc`, {
-                    method: "GET",
-                    headers: getHeaders()
-                });
-                if (!response.ok) throw new Error("Cloud fetch failed");
-                fleet = await response.json();
-                updateInterfaceMetricsAndAlerts();
-                buildRegistryTableRows();
-            } catch (err) {
-                console.error("Database sync alert, using mock dataset:", err);
-                fleet = [
-                    { 
-                        plate: "SAB-2391", model: "Toyota Hilux D-4D", year: "2021", driver: "Engr. J. Ramos", lto: "2026-11-19", gsis: "2026-12-01", next_pms: "2026-10-25", vehicle_status: "Operational", equipment_category: "Service Vehicle", 
-                        repair_history: "2026-09-10 | JO-102 | ₱12500 | City Motorpool | Brake pads & brake fluid flush | Brake Pads Set | Inspected and tested ok\n2026-05-12 | JO-041 | ₱8400 | Baguio Auto Repair | Standard 10K Engine Oil & Filter Change | Oil Filter, Fully Synthetic Oil | Routine PMS Done" 
-                    }
-                ];
-                updateInterfaceMetricsAndAlerts();
-                buildRegistryTableRows();
-            } finally {
-                toggleLoading(false);
-            }
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(fleetData));
         }
 
         function setupEventListeners() {
-            document.getElementById('gatekeeper-form').addEventListener('submit', verifySecurityAccess);
-            document.getElementById('menu-add-vehicle').addEventListener('click', () => openFormModal());
-            document.getElementById('btn-close-modal').addEventListener('click', closeFormModal);
-            document.getElementById('btn-close-modal-footer').addEventListener('click', closeFormModal);
-            document.getElementById('vehicle-form').addEventListener('submit', handleFormSubmission);
-            document.getElementById('table-search').addEventListener('input', buildRegistryTableRows);
+            document.getElementById('gatekeeper-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                document.getElementById('gatekeeper-lock').classList.add('hidden');
+            });
+            document.getElementById('menu-add-vehicle').addEventListener('click', () => openVehicleModal());
+            document.getElementById('btn-close-modal').addEventListener('click', closeVehicleModal);
+            document.getElementById('btn-close-modal-footer').addEventListener('click', closeVehicleModal);
+            document.getElementById('vehicle-form').addEventListener('submit', saveVehicleForm);
+            document.getElementById('table-search').addEventListener('input', renderDashboard);
         }
 
-        function toggleMobileSidebar(isOpen) {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebar-backdrop');
-            sidebar.classList.toggle('-translate-x-full', !isOpen);
-            backdrop.classList.toggle('hidden', !isOpen);
+        function toggleMobileSidebar(show) {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full', !show);
+            document.getElementById('sidebar-backdrop').classList.toggle('hidden', !show);
         }
 
-        function switchActiveView(viewId) {
-            toggleMobileSidebar(false);
+        function switchActiveView(viewName) {
             ['dashboard', 'reports', 'repository', 'utilities'].forEach(v => {
-                document.getElementById(`view-${v}`)?.classList.add('hidden');
+                document.getElementById(`view-${v}`)?.classList.toggle('hidden', v !== viewName);
             });
-            document.getElementById(`view-${viewId}`)?.classList.remove('hidden');
+            toggleMobileSidebar(false);
         }
 
-        function evaluateDateStatus(targetDateStr) {
-            if (!targetDateStr) return { label: "N/A", statusClass: "valid", colorClass: "text-slate-500 bg-slate-800/20", daysRemaining: 9999 };
-            const targetDate = new Date(targetDateStr);
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            targetDate.setHours(0,0,0,0);
-
-            const daysRemaining = Math.ceil((targetDate - today) / (1000 * 3600 * 24));
-            if (daysRemaining < 0) return { label: "EXPIRED", statusClass: "expired", colorClass: "text-rose-400 bg-rose-500/10", daysRemaining };
-            if (daysRemaining <= 60) return { label: `WARN (${daysRemaining}d)`, statusClass: "expiring", colorClass: "text-amber-400 bg-amber-500/10", daysRemaining };
-            return { label: "VALID", statusClass: "valid", colorClass: "text-emerald-400 bg-emerald-500/10", daysRemaining };
+        function getDateStatus(dateStr) {
+            if (!dateStr) return { status: 'valid', text: 'N/A', days: 999 };
+            const today = new Date(2026, 9, 8);
+            const target = new Date(dateStr);
+            const days = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+            if (days < 0) return { status: 'expired', text: `Expired (${Math.abs(days)}d ago)`, days };
+            if (days <= 30) return { status: 'expiring', text: `Due in ${days} days`, days };
+            return { status: 'valid', text: `Valid (${days}d left)`, days };
         }
 
-        function updateInterfaceMetricsAndAlerts() {
-            document.getElementById('stat-total').innerText = fleet.length;
-            let expired = 0, warning = 0, valid = 0;
-            fleet.forEach(v => {
-                const s = evaluateDateStatus(v.next_pms);
-                if (s.statusClass === 'expired') expired++;
-                else if (s.statusClass === 'expiring') warning++;
-                else valid++;
-            });
-            document.getElementById('stat-expired').innerText = expired;
-            document.getElementById('stat-warning').innerText = warning;
-            document.getElementById('stat-valid').innerText = valid;
-        }
-
-        function buildRegistryTableRows() {
-            const query = document.getElementById('table-search').value.toLowerCase();
+        function renderDashboard() {
             const tbody = document.getElementById('registry-table-body');
-            tbody.innerHTML = "";
-
-            fleet.forEach((v, index) => {
-                if (query && !v.plate.toLowerCase().includes(query) && !v.model.toLowerCase().includes(query)) return;
-                const pmsStat = evaluateDateStatus(v.next_pms);
-                const row = document.createElement('tr');
-                row.className = "hover:bg-slate-800/20 transition-all border-b border-brand-border/40";
-                row.innerHTML = `
-                    <td class="py-4 px-6 font-mono font-bold text-white">${v.plate}</td>
-                    <td class="py-4 px-6 font-semibold text-slate-100">${v.model}</td>
-                    <td class="py-4 px-6 text-slate-300">${v.driver || 'Unassigned'}</td>
-                    <td class="py-4 px-6"><span class="px-2 py-0.5 text-xs font-bold rounded ${evaluateDateStatus(v.lto).colorClass}">${v.lto || 'N/A'}</span></td>
-                    <td class="py-4 px-6"><span class="px-2 py-0.5 text-xs font-bold rounded ${evaluateDateStatus(v.gsis).colorClass}">${v.gsis || 'N/A'}</span></td>
-                    <td class="py-4 px-6"><span class="px-2 py-0.5 text-xs font-bold rounded ${pmsStat.colorClass}">${pmsStat.label}</span></td>
-                    <td class="py-4 px-6 text-center">
-                        <button onclick="openFormModal(${index})" class="bg-slate-800 hover:bg-slate-700 text-xs font-semibold py-1.5 px-3 rounded text-slate-200">📝 Manage / Logs</button>
+            tbody.innerHTML = '';
+            fleetData.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition-all";
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-mono font-bold text-white">${item.plate}</td>
+                    <td class="py-4 px-6"><strong class="text-white">${item.make} ${item.model}</strong><br><span class="text-xs text-slate-400">${item.year}</span></td>
+                    <td class="py-4 px-6 font-semibold text-slate-200">${item.driver}</td>
+                    <td class="py-4 px-6">${item.ltoExpire || 'N/A'}</td>
+                    <td class="py-4 px-6">${item.gsisExpire || 'N/A'}</td>
+                    <td class="py-4 px-6">${item.pmsExpire || 'N/A'}</td>
+                    <td class="py-4 px-6 text-xs text-slate-400 max-w-xs truncate">${item.lastRepair || 'None'}</td>
+                    <td class="py-4 px-6 text-center space-x-2">
+                        <button onclick="openVehicleModal(${idx})" class="text-blue-400 hover:text-blue-300 text-xs font-semibold">Edit / Logs</button>
                     </td>
                 `;
-                tbody.appendChild(row);
+                tbody.appendChild(tr);
             });
+            document.getElementById('stat-total').innerText = fleetData.length;
         }
 
-        // =========================================================================
-        // PROACTIVE PREVENTIVE MAINTENANCE ADVISORY ENGINE
-        // =========================================================================
-        function checkPmsAdvisoryState() {
-            const pmsVal = document.getElementById('f-pms').value;
-            const banner = document.getElementById('pm-advisory-banner');
-            const msg = document.getElementById('pm-advisory-msg');
-
-            if (!pmsVal) {
-                banner.classList.add('hidden');
-                return;
-            }
-
-            const pmsDate = new Date(pmsVal);
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            pmsDate.setHours(0,0,0,0);
-
-            const diffDays = Math.ceil((pmsDate - today) / (1000 * 3600 * 24));
-
-            if (diffDays <= 30) {
-                banner.classList.remove('hidden');
-                if (diffDays < 0) {
-                    msg.innerHTML = `<strong class="text-rose-400 font-bold">[OVERDUE]</strong> PMS is overdue by ${Math.abs(diffDays)} days! Execute immediate service.`;
-                } else {
-                    msg.innerHTML = `<strong class="text-amber-400 font-bold">[DUE SOON]</strong> Scheduled maintenance due in ${diffDays} days (within 30-day threshold).`;
-                }
-            } else {
-                banner.classList.add('hidden');
-            }
-        }
-
-        function triggerPmNowAction() {
-            const todayStr = new Date().toISOString().split('T')[0];
-            document.getElementById('log-add-date').value = todayStr;
-            document.getElementById('log-add-jo').value = `PMS-AUTO-${Math.floor(1000 + Math.random() * 9000)}`;
-            document.getElementById('log-add-shop').value = "City Engineering Motorpool";
-            document.getElementById('log-add-desc').value = "Routine Preventive Maintenance Service (PMS)";
-            document.getElementById('log-add-parts').value = "Engine Oil, Oil Filter, Fuel Filter";
-            document.getElementById('log-add-notes').value = "Automated PM trigger completed via Proactive Advisory Engine";
-            
-            // Auto advance next PMS by 6 months (180 days)
-            const nextPmsDate = new Date();
-            nextPmsDate.setMonth(nextPmsDate.getMonth() + 6);
-            document.getElementById('f-pms').value = nextPmsDate.toISOString().split('T')[0];
-            
-            checkPmsAdvisoryState();
-            alert("PM Maintenance trigger initialized! Review details in Structured Entry Form below and click '➕ Commit Log'.");
-        }
-
-        // =========================================================================
-        // ENHANCED REPAIR HISTORY MODULE (CHRONOLOGICAL SORT & FUZZY SEARCH & METRICS)
-        // =========================================================================
-        function toggleRepairSortOrder() {
-            sortNewestFirst = !sortNewestFirst;
-            document.getElementById('sort-toggle-btn').innerHTML = sortNewestFirst ? "⬇️ Newest First" : "⬆️ Oldest First";
-            renderHistoryTimeline();
-        }
-
-        function parseRawHistoryString(historyStr) {
-            if (!historyStr || !historyStr.trim()) return [];
-            const lines = historyStr.split('\n').filter(l => l.trim());
-            return lines.map(line => {
-                const parts = line.split('|').map(p => p.trim());
-                return {
-                    date: parts[0] || '',
-                    jo: parts[1] || 'N/A',
-                    cost: parseFloat((parts[2] || '0').replace(/[^0-9.]/g, '')) || 0,
-                    shop: parts[3] || 'General Shop',
-                    desc: parts[4] || parts[0] || 'Unspecified Service',
-                    parts: parts[5] || 'None',
-                    notes: parts[6] || ''
-                };
-            });
-        }
-
-        function buildRawHistoryString(entries) {
-            return entries.map(e => `${e.date} | ${e.jo} | ₱${e.cost} | ${e.shop} | ${e.desc} | ${e.parts} | ${e.notes}`).join('\n');
-        }
-
-        function renderHistoryTimeline() {
-            const rawHistory = document.getElementById('f-history').value;
-            let entries = parseRawHistoryString(rawHistory);
-            
-            // Calculate Summary Metrics
-            const totalCost = entries.reduce((acc, curr) => acc + curr.cost, 0);
-            const totalIncidents = entries.length;
-            const uniqueShops = new Set(entries.map(e => e.shop.toLowerCase())).size;
-
-            document.getElementById('metric-total-cost').innerText = `₱${totalCost.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
-            document.getElementById('metric-total-incidents').innerText = totalIncidents;
-            document.getElementById('metric-unique-shops').innerText = uniqueShops;
-
-            // Mount Recharts Visualizations
-            renderSpendingTrendChart(entries);
-
-            // Fuzzy Search Filter
-            const searchQ = (document.getElementById('history-search-input')?.value || '').toLowerCase();
-            if (searchQ) {
-                entries = entries.filter(e => 
-                    e.desc.toLowerCase().includes(searchQ) ||
-                    e.jo.toLowerCase().includes(searchQ) ||
-                    e.shop.toLowerCase().includes(searchQ) ||
-                    e.parts.toLowerCase().includes(searchQ) ||
-                    e.notes.toLowerCase().includes(searchQ)
-                );
-            }
-
-            // Interactive Chronological Sort
-            entries.sort((a, b) => {
-                const dateA = new Date(a.date || '1970-01-01');
-                const dateB = new Date(b.date || '1970-01-01');
-                return sortNewestFirst ? dateB - dateA : dateA - dateB;
-            });
-
-            const container = document.getElementById('history-display-timeline');
-            container.innerHTML = "";
-
-            if (entries.length === 0) {
-                container.innerHTML = `<span class="italic text-slate-500 block py-3 text-center">No repair history records match criteria.</span>`;
-                return;
-            }
-
-            entries.forEach((item, idx) => {
-                const card = document.createElement('div');
-                card.className = "bg-slate-900/60 border border-brand-border/60 rounded-lg p-3 space-y-1.5 relative group";
-                card.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <span class="font-mono text-emerald-400 font-bold">${item.date || 'Undated'}</span>
-                        <div class="flex items-center gap-2">
-                            <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono px-2 py-0.5 rounded text-[10px] font-bold">${item.jo}</span>
-                            <span class="font-mono font-extrabold text-white">₱${item.cost.toLocaleString()}</span>
-                        </div>
-                    </div>
-                    <p class="text-slate-100 font-semibold text-xs">${item.desc}</p>
-                    <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 pt-1 border-t border-brand-border/30">
-                        <div><strong>Shop:</strong> ${item.shop}</div>
-                        <div><strong>Parts:</strong> ${item.parts}</div>
-                    </div>
-                    ${item.notes ? `<p class="text-[10px] text-slate-400 italic">Note: ${item.notes}</p>` : ''}
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function addStructuredLogEntry() {
-            const date = document.getElementById('log-add-date').value || new Date().toISOString().split('T')[0];
-            const jo = document.getElementById('log-add-jo').value.trim() || 'JO-GEN';
-            const cost = parseFloat(document.getElementById('log-add-cost').value) || 0;
-            const shop = document.getElementById('log-add-shop').value.trim() || 'General Shop';
-            const desc = document.getElementById('log-add-desc').value.trim();
-            const parts = document.getElementById('log-add-parts').value.trim() || 'N/A';
-            const notes = document.getElementById('log-add-notes').value.trim() || 'N/A';
-
-            if (!desc) return alert("Service description is required!");
-
-            const existingEntries = parseRawHistoryString(document.getElementById('f-history').value);
-            existingEntries.push({ date, jo, cost, shop, desc, parts, notes });
-
-            document.getElementById('f-history').value = buildRawHistoryString(existingEntries);
-            
-            // Clear inputs
-            ['log-add-jo', 'log-add-cost', 'log-add-shop', 'log-add-desc', 'log-add-parts', 'log-add-notes'].forEach(id => {
-                document.getElementById(id).value = '';
-            });
-
-            renderHistoryTimeline();
-        }
-
-        // =========================================================================
-        // SPENDINGS TREND VISUALIZATIONS (RECHARTS ENGINE)
-        // =========================================================================
-        function renderSpendingTrendChart(entries) {
-            const chartDiv = document.getElementById('recharts-spending-container');
-            if (!chartDiv || !window.Recharts) return;
-
-            // Aggregate cost by last 12 calendar months
-            const monthlyMap = {};
-            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            
-            // Initialize 12 months array
-            const chartData = months.map(m => ({ month: m, Cost: 0 }));
-
-            entries.forEach(e => {
-                if (e.date) {
-                    const d = new Date(e.date);
-                    if (!isNaN(d)) {
-                        const monthIdx = d.getMonth();
-                        chartData[monthIdx].Cost += e.cost;
-                    }
-                }
-            });
-
-            const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } = window.Recharts;
-
-            const CustomTooltip = ({ active, payload, label }) => {
-                if (active && payload && payload.length) {
-                    return React.createElement('div', { className: 'bg-slate-900 border border-brand-border p-2 rounded shadow-lg text-xs' },
-                        React.createElement('p', { className: 'font-bold text-white' }, `${label}`),
-                        React.createElement('p', { className: 'text-emerald-400 font-mono' }, `Total Spending: ₱${payload[0].value.toLocaleString()}`)
-                    );
-                }
-                return null;
-            };
-
-            const AppChart = () => React.createElement(
-                ResponsiveContainer, { width: '100%', height: '100%' },
-                React.createElement(BarChart, { data: chartData, margin: { top: 10, right: 10, left: -20, bottom: 0 } },
-                    React.createElement(CartesianGrid, { strokeDasharray: '3 3', stroke: '#243249' }),
-                    React.createElement(XAxis, { dataKey: 'month', stroke: '#94a3b8', fontSize: 10 }),
-                    React.createElement(YAxis, { stroke: '#94a3b8', fontSize: 10 }),
-                    React.createElement(Tooltip, { content: React.createElement(CustomTooltip) }),
-                    React.createElement(Bar, { dataKey: 'Cost', fill: '#10b981', radius: [4, 4, 0, 0] })
-                )
-            );
-
-            ReactDOM.render(React.createElement(AppChart), chartDiv);
-        }
-
-        // =========================================================================
-        // FORM MODAL CONTROLLERS
-        // =========================================================================
-        function openFormModal(index = -1) {
-            const form = document.getElementById('vehicle-form');
-            form.reset();
+        function openVehicleModal(index = -1) {
+            document.getElementById('vehicle-form').reset();
+            document.getElementById('edit-idx').value = index;
 
             if (index > -1) {
-                const v = fleet[index];
-                document.getElementById('modal-title').innerText = "Modify Existing Fleet Record";
-                document.getElementById('edit-idx').value = index;
-                document.getElementById('f-plate').value = v.plate;
-                document.getElementById('f-plate').disabled = true;
-                document.getElementById('f-year').value = v.year || '';
-                document.getElementById('f-model').value = v.model || '';
-                document.getElementById('f-driver').value = v.driver || '';
-                document.getElementById('f-lto').value = v.lto || '';
-                document.getElementById('f-gsis').value = v.gsis || '';
-                document.getElementById('f-pms').value = v.next_pms || '';
-                document.getElementById('f-history').value = v.repair_history || '';
-                document.getElementById('f-status').value = v.vehicle_status || 'Operational';
-                document.getElementById('f-category').value = v.equipment_category || 'Service Vehicle';
-            } else {
-                document.getElementById('modal-title').innerText = "Log New Fleet Vehicle / Equipment";
-                document.getElementById('edit-idx').value = -1;
-                document.getElementById('f-plate').disabled = false;
-            }
+                const item = fleetData[index];
+                document.getElementById('modal-title').innerText = `Manage Equipment: ${item.plate}`;
+                document.getElementById('f-plate').value = item.plate;
+                document.getElementById('f-year').value = item.year;
+                document.getElementById('f-model').value = item.model;
+                document.getElementById('f-driver').value = item.driver;
+                document.getElementById('f-lto').value = item.ltoExpire;
+                document.getElementById('f-gsis').value = item.gsisExpire;
+                document.getElementById('f-pms').value = item.pmsExpire;
 
-            document.getElementById('log-add-date').value = "2026-10-08";
-            checkPmsAdvisoryState();
-            renderHistoryTimeline();
+                checkProactivePmsAdvisory(item.pmsExpire);
+                renderSpendingChart(item.repairLogs || []);
+                renderEnhancedRepairHistory();
+            } else {
+                document.getElementById('modal-title').innerText = 'Log New Fleet Vehicle / Equipment';
+                document.getElementById('pms-advisory-banner').classList.add('hidden');
+                renderSpendingChart([]);
+                renderEnhancedRepairHistory();
+            }
 
             const modal = document.getElementById('form-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
 
-        function closeFormModal() {
-            document.getElementById('form-modal').classList.add('hidden');
+        function closeVehicleModal() {
+            const modal = document.getElementById('form-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
-        async function handleFormSubmission(e) {
-            e.preventDefault();
-            const idx = parseInt(document.getElementById('edit-idx').value);
-            
-            const recordData = {
-                plate: document.getElementById('f-plate').value.trim().toUpperCase(),
-                year: document.getElementById('f-year').value.toString(),
-                model: document.getElementById('f-model').value.trim(),
-                driver: document.getElementById('f-driver').value.trim() || null,
-                lto: document.getElementById('f-lto').value || null,
-                gsis: document.getElementById('f-gsis').value || null,
-                next_pms: document.getElementById('f-pms').value || null,
-                repair_history: document.getElementById('f-history').value.trim() || null,
-                vehicle_status: document.getElementById('f-status').value,
-                equipment_category: document.getElementById('f-category').value
-            };
+        /* MODULE 2: PROACTIVE PREVENTIVE MAINTENANCE ADVISORY ENGINE */
+        function checkProactivePmsAdvisory(pmsDateStr) {
+            const banner = document.getElementById('pms-advisory-banner');
+            const badge = document.getElementById('pms-advisory-badge');
+            const text = document.getElementById('pms-advisory-text');
 
-            toggleLoading(true);
-            try {
-                let response;
-                if (idx > -1) {
-                    response = await fetch(`${SUPABASE_URL}/rest/v1/fleet?plate=eq.${encodeURIComponent(recordData.plate)}`, {
-                        method: "PATCH",
-                        headers: getHeaders(),
-                        body: JSON.stringify(recordData)
-                    });
+            if (!pmsDateStr) {
+                banner.classList.add('hidden');
+                return;
+            }
+
+            const st = getDateStatus(pmsDateStr);
+            if (st.status === 'expired' || st.status === 'expiring') {
+                banner.classList.remove('hidden');
+                if (st.status === 'expired') {
+                    badge.className = "px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-rose-500 text-white";
+                    badge.innerText = "OVERDUE ATTENTION";
+                    text.innerText = `Preventive Maintenance Service was due on ${pmsDateStr} (${Math.abs(st.days)} days overdue). Click below to perform service instantly.`;
                 } else {
-                    response = await fetch(`${SUPABASE_URL}/rest/v1/fleet`, {
-                        method: "POST",
-                        headers: getHeaders(),
-                        body: JSON.stringify(recordData)
-                    });
+                    badge.className = "px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500 text-slate-950";
+                    badge.innerText = "DUE SOON";
+                    text.innerText = `Preventive Maintenance Service scheduled in ${st.days} days (${pmsDateStr}). Prepare filter/fluid replacement inventory.`;
                 }
-
-                closeFormModal();
-                fetchFleetFromCloud();
-            } catch (err) {
-                alert(`Error saving record: ${err.message}`);
-            } finally {
-                toggleLoading(false);
+            } else {
+                banner.classList.add('hidden');
             }
         }
 
-        function triggerExecutiveReportPrint() {
-            document.body.classList.remove('printing-single-profile');
-            document.body.classList.add('printing-exec-report');
-            window.print();
+        function triggerPmsNow() {
+            const todayStr = "2026-10-08";
+            document.getElementById('new-log-date').value = todayStr;
+            document.getElementById('new-log-po').value = "PMS-DIRECT";
+            document.getElementById('new-log-workshop').value = "City Engineering Motorpool";
+            document.getElementById('new-log-cost').value = "3500";
+            document.getElementById('new-log-activity').value = "Scheduled Preventive Maintenance: Replaced Engine Oil, Oil Filter, and Fuel Filter.";
+            addEnhancedMaintenanceLogEntry();
+
+            // Set next PMS to +6 months
+            const nextPms = new Date(2026, 9, 8);
+            nextPms.setMonth(nextPms.getMonth() + 6);
+            document.getElementById('f-pms').value = nextPms.toISOString().slice(0, 10);
+            checkProactivePmsAdvisory(document.getElementById('f-pms').value);
         }
 
-        function exportLocalDatabaseToBackupFile() {
-            const dataBlob = new Blob([JSON.stringify(fleet, null, 2)], { type: "application/json" });
-            const anchor = document.createElement('a');
-            anchor.href = URL.createObjectURL(dataBlob);
-            anchor.download = `CEO_FLEET_SNAPSHOT_${new Date().toISOString().split('T')[0]}.json`;
-            anchor.click();
+        /* MODULE 3: SPENDINGS TREND VISUALIZATIONS */
+        function renderSpendingChart(logs) {
+            const container = document.getElementById('spending-bar-chart-container');
+            const labelsRow = document.getElementById('spending-bar-chart-labels');
+            container.innerHTML = '';
+            labelsRow.innerHTML = '';
+
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthlySpend = new Array(12).fill(0);
+
+            logs.forEach(l => {
+                if (l.date && l.cost) {
+                    const m = new Date(l.date).getMonth();
+                    monthlySpend[m] += parseFloat(l.cost) || 0;
+                }
+            });
+
+            const maxSpend = Math.max(...monthlySpend, 10000);
+            const totalYearSpend = monthlySpend.reduce((a, b) => a + b, 0);
+            document.getElementById('chart-year-total').innerText = `₱${totalYearSpend.toLocaleString('en-PH', {minimumFractionDigits:2})} Total`;
+
+            months.forEach((m, idx) => {
+                const val = monthlySpend[idx];
+                const heightPct = Math.max(Math.round((val / maxSpend) * 100), 4);
+
+                const bar = document.createElement('div');
+                bar.className = "flex-1 bg-emerald-500/20 hover:bg-emerald-500/40 border-t-2 border-emerald-400 rounded-t transition-all relative group flex flex-col justify-end";
+                bar.style.height = `${heightPct}%`;
+                bar.innerHTML = `
+                    <div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 border border-brand-border text-[9px] font-mono text-emerald-400 px-1.5 py-0.5 rounded shadow-lg whitespace-nowrap z-20 pointer-events-none transition-all">
+                        ₱${val.toLocaleString('en-PH')}
+                    </div>
+                `;
+                container.appendChild(bar);
+
+                const lbl = document.createElement('span');
+                lbl.className = "flex-1 text-center";
+                lbl.innerText = m;
+                labelsRow.appendChild(lbl);
+            });
         }
+
+        /* MODULE 1: ENHANCED REPAIR HISTORY MODULE */
+        function toggleRepairSortOrder() {
+            repairSortAscending = !repairSortAscending;
+            document.getElementById('repair-sort-btn').innerText = repairSortAscending ? '⬆️ Oldest First' : '⬇️ Newest First';
+            renderEnhancedRepairHistory();
+        }
+
+        function getActiveModalLogs() {
+            const idx = parseInt(document.getElementById('edit-idx').value);
+            if (idx > -1 && fleetData[idx].repairLogs) {
+                return fleetData[idx].repairLogs;
+            }
+            return [];
+        }
+
+        function renderEnhancedRepairHistory() {
+            const logs = getActiveModalLogs();
+            const query = (document.getElementById('repair-search-input').value || '').toLowerCase();
+            const container = document.getElementById('history-display-timeline');
+            container.innerHTML = '';
+
+            let filtered = logs.filter(l => {
+                const searchStr = `${l.date} ${l.po} ${l.workshop} ${l.details}`.toLowerCase();
+                return searchStr.includes(query);
+            });
+
+            filtered.sort((a, b) => {
+                const dA = new Date(a.date || '1970-01-01');
+                const dB = new Date(b.date || '1970-01-01');
+                return repairSortAscending ? dA - dB : dB - dA;
+            });
+
+            // Calculate Statistics
+            let totalCost = 0;
+            const workshops = new Set();
+            logs.forEach(l => {
+                totalCost += parseFloat(l.cost) || 0;
+                if (l.workshop) workshops.add(l.workshop.trim());
+            });
+
+            document.getElementById('repair-stat-cost').innerText = `₱${totalCost.toLocaleString('en-PH', {minimumFractionDigits:2})}`;
+            document.getElementById('repair-stat-incidents').innerText = logs.length;
+            document.getElementById('repair-stat-workshops').innerText = workshops.size;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="py-4 text-center text-slate-500 italic">No maintenance logs matching query.</div>`;
+                return;
+            }
+
+            filtered.forEach((log, realIdx) => {
+                const item = document.createElement('div');
+                item.className = "pt-2 font-sans";
+                item.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <div>
+                            <span class="font-mono text-emerald-400 font-bold">${log.date}</span>
+                            ${log.po ? `<span class="ml-2 bg-slate-800 text-slate-300 text-[9px] px-1.5 py-0.5 rounded border border-brand-border">${log.po}</span>` : ''}
+                            ${log.workshop ? `<span class="ml-1 text-slate-400 font-medium">• ${log.workshop}</span>` : ''}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-bold text-slate-200">₱${(parseFloat(log.cost)||0).toLocaleString('en-PH')}</span>
+                            <button type="button" onclick="deleteRepairLogEntry(${realIdx})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>
+                        </div>
+                    </div>
+                    <p class="text-slate-300 mt-1 leading-relaxed">${log.details}</p>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addEnhancedMaintenanceLogEntry() {
+            const date = document.getElementById('new-log-date').value;
+            const po = document.getElementById('new-log-po').value.trim();
+            const workshop = document.getElementById('new-log-workshop').value.trim();
+            const cost = document.getElementById('new-log-cost').value;
+            const details = document.getElementById('new-log-activity').value.trim();
+
+            if (!details) {
+                alert("Please specify service activity details.");
+                return;
+            }
+
+            const idx = parseInt(document.getElementById('edit-idx').value);
+            if (idx > -1) {
+                fleetData[idx].repairLogs = fleetData[idx].repairLogs || [];
+                fleetData[idx].repairLogs.push({
+                    date: date || '2026-10-08',
+                    po: po || 'N/A',
+                    workshop: workshop || 'Motorpool',
+                    cost: parseFloat(cost) || 0,
+                    details
+                });
+                fleetData[idx].lastRepair = details;
+                saveData();
+                renderSpendingChart(fleetData[idx].repairLogs);
+                renderEnhancedRepairHistory();
+
+                document.getElementById('new-log-po').value = '';
+                document.getElementById('new-log-workshop').value = '';
+                document.getElementById('new-log-cost').value = '';
+                document.getElementById('new-log-activity').value = '';
+            }
+        }
+
+        function deleteRepairLogEntry(logIndex) {
+            const idx = parseInt(document.getElementById('edit-idx').value);
+            if (idx > -1 && fleetData[idx].repairLogs) {
+                fleetData[idx].repairLogs.splice(logIndex, 1);
+                saveData();
+                renderSpendingChart(fleetData[idx].repairLogs);
+                renderEnhancedRepairHistory();
+            }
+        }
+
+        function saveVehicleForm(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('edit-idx').value);
+            const data = {
+                id: idx > -1 ? fleetData[idx].id : 'unit-' + Date.now(),
+                category: document.getElementById('f-category').value,
+                plate: document.getElementById('f-plate').value,
+                make: document.getElementById('f-model').value.split(' ')[0] || 'Generic',
+                model: document.getElementById('f-model').value,
+                year: parseInt(document.getElementById('f-year').value) || 2026,
+                driver: document.getElementById('f-driver').value,
+                ltoExpire: document.getElementById('f-lto').value,
+                gsisExpire: document.getElementById('f-gsis').value,
+                pmsExpire: document.getElementById('f-pms').value,
+                lastRepair: fleetData[idx]?.lastRepair || 'Updated',
+                repairLogs: fleetData[idx]?.repairLogs || []
+            };
+
+            if (idx > -1) fleetData[idx] = data;
+            else fleetData.push(data);
+
+            saveData();
+            closeVehicleModal();
+            renderDashboard();
+        }
+
+        window.onload = initApp;
     </script>
 </body>
 </html>
